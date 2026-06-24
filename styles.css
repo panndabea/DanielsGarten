@@ -84,7 +84,7 @@ button:disabled {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  margin-top: 12px;
+  margin-top: max(12px, env(safe-area-inset-top));
   padding: 10px;
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -140,7 +140,8 @@ button:disabled {
 .secondary-action,
 .primary-action,
 .time-option,
-.task-done {
+.task-done,
+.install-action {
   border: 1px solid var(--line);
   border-radius: 8px;
   min-height: 44px;
@@ -156,6 +157,19 @@ button:disabled {
   gap: 8px;
   padding: 0 14px;
   font-weight: 850;
+}
+
+.install-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  padding: 0 12px;
+  background: var(--surface);
+  color: var(--leaf-strong);
+  font-size: .84rem;
+  font-weight: 850;
+  white-space: nowrap;
 }
 
 .primary-action {
@@ -186,7 +200,8 @@ button:disabled {
 .secondary-action:hover,
 .primary-action:hover,
 .time-option:hover,
-.task-done:hover {
+.task-done:hover,
+.install-action:hover {
   transform: translateY(-1px);
 }
 
@@ -893,7 +908,7 @@ body[data-design="swiss"] {
   font-family: "Helvetica Neue", Arial, ui-sans-serif, system-ui, sans-serif;
 }
 
-body[data-design="swiss"] :is(.app-header, .brand-mark, .date-pill, .panel-chip, .task-pill, .priority-pill, .secondary-action, .primary-action, .time-option, .task-done, .hero-panel, .planner-panel, .field-group legend span, input, select, .type-chip, .weather-metric, .task-card, .empty-state, .settings-disclosure > summary, .weather-details summary, .task-more summary::after) {
+body[data-design="swiss"] :is(.app-header, .brand-mark, .date-pill, .panel-chip, .task-pill, .priority-pill, .secondary-action, .primary-action, .time-option, .task-done, .install-action, .hero-panel, .planner-panel, .field-group legend span, input, select, .type-chip, .weather-metric, .task-card, .empty-state, .settings-disclosure > summary, .weather-details summary, .task-more summary::after) {
   border-radius: 0;
 }
 
@@ -1041,7 +1056,7 @@ body[data-design="swiss"] .task-card.is-featured {
   }
 
   .app-header {
-    margin-top: 10px;
+    margin-top: max(10px, env(safe-area-inset-top));
   }
 
   .date-pill {

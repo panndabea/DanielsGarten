@@ -1641,6 +1641,8 @@ const state = {
   hasGenerated: false
 };
 
+let deferredInstallPrompt = null;
+
 const elements = {
   todayLabel: document.getElementById('todayLabel'),
   flowSignal: document.getElementById('flowSignal'),
@@ -1655,6 +1657,7 @@ const elements = {
   cityInput: document.getElementById('cityInput'),
   useGps: document.getElementById('useGps'),
   searchCity: document.getElementById('searchCity'),
+  installButton: document.getElementById('installButton'),
   generateButton: document.getElementById('generateButton'),
   generateButtonIcon: document.getElementById('generateButtonIcon'),
   generateButtonLabel: document.getElementById('generateButtonLabel'),
@@ -1698,10 +1701,76 @@ function init() {
   });
   elements.regenerateButton.addEventListener('click', generateRecommendations);
 
+  setupNetworkStatus();
+  setupInstallPrompt();
+  registerServiceWorker();
   updateTimeButtons();
   updateSettingsSummary();
   renderWeather(null);
   renderIntroState();
+}
+
+function setupNetworkStatus() {
+  let wasOffline = !navigator.onLine;
+
+  if (!navigator.onLine) {
+    setStatus('Du bist offline. Gartenzeit nutzt den saisonalen Fallback, wenn Wetterdaten nicht erreichbar sind.');
+  }
+
+  window.addEventListener('offline', () => {
+    wasOffline = true;
+    setStatus('Du bist offline. Gartenzeit nutzt den saisonalen Fallback, wenn Wetterdaten nicht erreichbar sind.');
+  });
+
+  window.addEventListener('online', () => {
+    if (wasOffline) {
+      setStatus('Du bist wieder online. Wetterdaten werden bei der nächsten Berechnung frisch geladen.');
+    }
+    wasOffline = false;
+  });
+}
+
+function isStandaloneDisplay() {
+  return (
+    window.matchMedia('(display-mode: standalone)').matches ||
+    window.navigator.standalone === true
+  );
+}
+
+function setupInstallPrompt() {
+  if (!elements.installButton || isStandaloneDisplay()) return;
+
+  window.addEventListener('beforeinstallprompt', event => {
+    event.preventDefault();
+    deferredInstallPrompt = event;
+    elements.installButton.hidden = false;
+  });
+
+  elements.installButton.addEventListener('click', async () => {
+    if (!deferredInstallPrompt) return;
+
+    const promptEvent = deferredInstallPrompt;
+    deferredInstallPrompt = null;
+    elements.installButton.hidden = true;
+
+    promptEvent.prompt();
+    await promptEvent.userChoice.catch(() => null);
+  });
+
+  window.addEventListener('appinstalled', () => {
+    deferredInstallPrompt = null;
+    elements.installButton.hidden = true;
+  });
+}
+
+function registerServiceWorker() {
+  if (!('serviceWorker' in navigator)) return;
+
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {
+      // Service Worker is an enhancement; the app still works without it.
+    });
+  });
 }
 
 function selectMinutes(minutes) {
@@ -2106,6 +2175,7 @@ function renderWeather(weather) {
 function renderTasks(tasks, context) {
   const typeText = context.selectedTypes.map(type => GARDEN_LABELS[type]).join(', ');
   const sourceText = context.weather.source === 'Open-Meteo' ? 'Wetter' : 'Saison';
+  const fallbackText = context.weather.source === 'Open-Meteo' ? '' : ' mit saisonalem Fallback';
   elements.contextLabel.textContent = `${context.location.label} · ${context.minutes} Minuten · ${sourceText}`;
   elements.resultTitle.textContent = tasks.length
     ? `${context.minutes} Minuten in ${context.location.label}`
@@ -2122,9 +2192,9 @@ function renderTasks(tasks, context) {
   elements.emptyState.classList.toggle('is-visible', !tasks.length);
 
   if (tasks.length) {
-    setStatus(`${tasks.length} Vorschläge für ${typeText}.`);
+    setStatus(`${tasks.length} Vorschläge für ${typeText}${fallbackText}.`);
   } else {
-    setStatus(`Keine dringenden Aufgaben für ${typeText}.`);
+    setStatus(`Keine dringenden Aufgaben für ${typeText}${fallbackText}.`);
   }
 }
 
