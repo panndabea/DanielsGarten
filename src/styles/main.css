@@ -182,7 +182,9 @@ button:disabled {
   min-height: 42px;
   overflow: hidden;
   padding: 5px 13px 5px 8px;
+  border-color: var(--leaf-strong);
   border-color: color-mix(in srgb, var(--leaf-strong) 76%, var(--line));
+  background: var(--leaf-strong);
   background:
     linear-gradient(135deg, var(--leaf-strong), color-mix(in srgb, var(--leaf) 72%, var(--ink)));
   color: #ffffff;
@@ -251,6 +253,7 @@ button:disabled {
 }
 
 .install-action-kicker {
+  color: #f7e7a6;
   color: color-mix(in srgb, #ffffff 78%, var(--sun));
   font-size: .58rem;
   line-height: 1;
@@ -333,6 +336,7 @@ button:disabled {
 
 .install-action:hover {
   border-color: var(--leaf-strong);
+  background: var(--leaf);
   background:
     linear-gradient(135deg, color-mix(in srgb, var(--leaf-strong) 90%, var(--ink)), var(--leaf));
 }
@@ -1458,6 +1462,7 @@ body[data-design="french"] .brand {
 
 body[data-design="french"] .brand-mark {
   border-radius: 8px;
+  background: var(--leaf-strong);
   background:
     linear-gradient(145deg, var(--leaf-strong), color-mix(in srgb, var(--leaf) 84%, var(--ink)));
 }
@@ -1694,7 +1699,24 @@ body[data-design="french"] .empty-state {
   }
 
   .app-header {
+    gap: 10px;
     margin-top: max(10px, env(safe-area-inset-top));
+    padding: 8px 10px;
+  }
+
+  .brand {
+    flex: 1 1 auto;
+  }
+
+  .brand > span:not(.brand-mark) {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .header-actions {
+    flex: 0 0 auto;
   }
 
   .date-pill {
@@ -1890,6 +1912,12 @@ body[data-design="french"] .empty-state {
 }
 
 @media (max-width: 470px) {
+  .app-header {
+    width: min(100% - 16px, 1180px);
+    gap: 8px;
+    padding: 8px;
+  }
+
   .hero-content,
   .planner-panel {
     padding: 16px;
@@ -1904,13 +1932,17 @@ body[data-design="french"] .empty-state {
   }
 
   .brand {
-    gap: 8px;
+    gap: 7px;
     font-size: .88rem;
   }
 
   .brand-mark {
-    width: 34px;
-    height: 34px;
+    width: 32px;
+    height: 32px;
+  }
+
+  .header-actions {
+    gap: 6px;
   }
 
   .mascot-stage {
@@ -1970,8 +2002,13 @@ body[data-design="french"] .empty-state {
 
   .install-action {
     gap: 7px;
+    max-width: 142px;
     min-height: 38px;
     padding: 4px 9px 4px 6px;
+  }
+
+  .install-action-copy {
+    min-width: 0;
   }
 
   .install-action-icon {
@@ -1980,11 +2017,14 @@ body[data-design="french"] .empty-state {
   }
 
   .install-action-kicker {
-    font-size: .54rem;
+    display: none;
   }
 
   .install-action-copy span:last-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
     font-size: .78rem;
+    white-space: nowrap;
   }
 
   .segmented,
