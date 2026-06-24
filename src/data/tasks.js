@@ -1,4 +1,4 @@
-const TASKS = [
+export const TASKS = [
   {
     id: 'water-check',
     title: 'Gießbedarf prüfen',

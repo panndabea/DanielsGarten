@@ -8,9 +8,9 @@ Dieser Plan ist so geschrieben, dass ein Junior Developer ihn Schritt fuer Schri
 
 Diese Punkte duerfen bei der Umsetzung nicht aufgeweicht werden:
 
-- Alle eigenen App-Pfade werden relativ angegeben, also `./`, `styles.css`, `sw.js` oder `assets/...`. Keine fuehrenden Slash-Pfade wie `/sw.js`, `/index.html` oder `/assets/...`, damit die App auch in einem Unterordner deploybar bleibt.
+- Alle eigenen App-Pfade werden relativ angegeben, also `./`, `src/styles/main.css`, `sw.js` oder `assets/...`. Keine fuehrenden Slash-Pfade wie `/sw.js`, `/index.html` oder `/assets/...`, damit die App auch in einem Unterordner deploybar bleibt.
 - Der Service Worker cached nur die App Shell und eigene statische Dateien. Open-Meteo Forecast- und Geocoding-Responses werden nicht in Cache Storage gespeichert, weil deren URLs Standortdaten enthalten koennen. Das schuetzt das Privacy-First-Prinzip aus dem PRD.
-- Offline-Wetter funktioniert ueber die bestehende saisonale Fallback-Logik in `script.js`, nicht ueber dauerhaft gecachte Wetterdaten.
+- Offline-Wetter funktioniert ueber die bestehende saisonale Fallback-Logik in `src/services/weather.js`, nicht ueber dauerhaft gecachte Wetterdaten.
 - Navigationsanfragen werden network-first behandelt und fallen nur offline auf das gecachte `index.html` zurueck. Dadurch bleiben Updates sichtbar, sobald Netzwerk da ist.
 - Statische same-origin Assets werden cache-first behandelt. Bei Aenderungen an App-Shell-Dateien muss die Cache-Version in `sw.js` erhoeht werden.
 - Nur Dateien, die wirklich von der App genutzt werden, kommen in den Precache. `assets/gartenzeit-comic-hero.png` wird nicht vorab gecached, solange es nicht in `index.html`, CSS oder JS verwendet wird.
@@ -24,8 +24,20 @@ Aktuelle Projektstruktur:
 
 ```text
 index.html
-styles.css
-script.js
+src/
+  main.js
+  app/
+    dom.js
+    pwa.js
+    ui.js
+  data/
+    tasks.js
+  domain/
+    task-engine.js
+  services/
+    weather.js
+  styles/
+    main.css
 assets/
   gartenzeit-hero.png
   gartenzeit-comic-hero.png
@@ -82,8 +94,9 @@ assets/icons/icon-source.png
 
 ```text
 index.html
-script.js
-styles.css
+src/main.js
+src/app/pwa.js
+src/styles/main.css
 ```
 
 ## Phase 0: Preflight
@@ -95,7 +108,7 @@ Vor der Umsetzung sicherstellen, dass keine falschen Annahmen in die PWA-Arbeit 
 ### Pruefen
 
 - `index.html` wird aus dem Projektroot ausgeliefert.
-- `script.js` liegt am Seitenende und kann Service-Worker-Registrierung am Ende oder in `init()` aufnehmen.
+- `index.html` laedt `src/main.js` als Modul am Seitenende; die Service-Worker-Registrierung liegt in `src/app/pwa.js`.
 - `statusLine` und `setStatus(...)` existieren und werden fuer Offline-/Online-Meldungen genutzt.
 - `assets/gartenzeit-hero.png` wird wirklich verwendet.
 - `assets/gartenzeit-comic-hero.png` wird aktuell nicht verwendet und bleibt aus dem Precache raus.
@@ -216,7 +229,7 @@ Die Datei muss gueltiges JSON sein:
 ### Wichtige Details
 
 - `start_url` und `scope` bleiben `./`, nicht `/`.
-- `theme_color` entspricht dem aktuellen starken Gruenton aus `styles.css`.
+- `theme_color` entspricht dem aktuellen starken Gruenton aus `src/styles/main.css`.
 - `background_color` entspricht dem hellen App-Hintergrund.
 - JSON darf keine Kommentare enthalten.
 
@@ -267,7 +280,7 @@ In `.header-actions` vor oder nach der Datumspille ergaenzen:
 </button>
 ```
 
-Der Button bleibt initial `hidden`. Sichtbarkeit und Prompt werden spaeter in `script.js` gesteuert.
+Der Button bleibt initial `hidden`. Sichtbarkeit und Prompt werden spaeter in `src/app/pwa.js` gesteuert.
 
 ### Akzeptanzkriterien
 
@@ -299,8 +312,14 @@ Beim Installieren des Service Workers werden nur diese Dateien vorab gecached:
 const APP_SHELL = [
   './',
   './index.html',
-  './styles.css',
-  './script.js',
+  './src/styles/main.css',
+  './src/main.js',
+  './src/app/dom.js',
+  './src/app/pwa.js',
+  './src/app/ui.js',
+  './src/domain/task-engine.js',
+  './src/services/weather.js',
+  './src/data/tasks.js',
   './manifest.webmanifest',
   './assets/gartenzeit-hero.png',
   './assets/icons/icon-192.png',
@@ -331,8 +350,14 @@ const APP_CACHE = `${CACHE_PREFIX}app-v1`;
 const APP_SHELL = [
   './',
   './index.html',
-  './styles.css',
-  './script.js',
+  './src/styles/main.css',
+  './src/main.js',
+  './src/app/dom.js',
+  './src/app/pwa.js',
+  './src/app/ui.js',
+  './src/domain/task-engine.js',
+  './src/services/weather.js',
+  './src/data/tasks.js',
   './manifest.webmanifest',
   './assets/gartenzeit-hero.png',
   './assets/icons/icon-192.png',
@@ -427,7 +452,7 @@ async function cacheFirst(request) {
 
 ### Wichtige Details
 
-- Bei jeder Aenderung an `index.html`, `styles.css`, `script.js`, Manifest oder Icons die Cache-Version erhoehen, z. B. von `gartenzeit-app-v1` auf `gartenzeit-app-v2`.
+- Bei jeder Aenderung an `index.html`, `src/styles/main.css`, Dateien unter `src/`, Manifest oder Icons die Cache-Version erhoehen, z. B. von `gartenzeit-app-v1` auf `gartenzeit-app-v2`.
 - Beim Aktivieren nur eigene Caches mit dem Prefix `gartenzeit-` loeschen.
 - Keine Open-Meteo-Responses in `caches.open(...)` speichern.
 - Keine `POST`-, Geolocation- oder fremden Cross-Origin-Requests behandeln.
@@ -441,7 +466,7 @@ async function cacheFirst(request) {
 - Open-Meteo Forecast- und Geocoding-URLs tauchen nicht in Cache Storage auf.
 - Alte `gartenzeit-app-v*` Cache-Versionen werden entfernt.
 
-## Phase 5: Service Worker in `script.js` registrieren
+## Phase 5: Service Worker registrieren
 
 ### Ziel
 
@@ -449,7 +474,7 @@ Der Browser soll `sw.js` registrieren, sobald die App geladen ist.
 
 ### Umsetzung
 
-Am Ende von `script.js` oder sauber aus `init()` heraus ergaenzen:
+In `src/app/pwa.js` ergaenzen und aus `src/main.js` heraus einmal aufrufen:
 
 ```js
 function registerServiceWorker() {
@@ -483,7 +508,7 @@ Danach `registerServiceWorker();` einmal aufrufen.
 
 Nutzer sollen verstehen, ob die App gerade offline arbeitet, ohne dass die Bedienung blockiert wird.
 
-### Umsetzung in `script.js`
+### Umsetzung in `src/app/pwa.js`
 
 Die vorhandene Funktion `setStatus(...)` und `statusLine` verwenden. Kein neues grosses UI-Element bauen.
 
@@ -532,7 +557,7 @@ function setupNetworkStatus() {
 
 Android und Desktop bekommen einen sauberen Install-Flow. iOS bleibt nutzbar ueber "Zum Home-Bildschirm"; ein iOS-Hinweis ist optional.
 
-### Umsetzung in `script.js`
+### Umsetzung in `src/app/pwa.js`
 
 `elements` erweitern:
 
@@ -611,7 +636,7 @@ Wenn der Hinweis das UI ueberlaedt, wird er in dieser Phase bewusst weggelassen.
 
 PWA-spezifische UI-Elemente sollen zum bestehenden Design passen und auf kleinen Screens nicht kollidieren.
 
-### Anpassungen in `styles.css`
+### Anpassungen in `src/styles/main.css`
 
 Install-Button in die bestehende Button-Systematik aufnehmen:
 
@@ -754,7 +779,7 @@ Vor Abschluss diese Liste abarbeiten:
 - [ ] `index.html` verlinkt Manifest und Icons.
 - [ ] Viewport nutzt `viewport-fit=cover`.
 - [ ] `index.html` enthaelt den initial verborgenen Install-Button.
-- [ ] `script.js` registriert den Service Worker mit relativem Pfad.
+- [ ] `src/app/pwa.js` registriert den Service Worker mit relativem Pfad.
 - [ ] Offline-/Online-Status wird angezeigt.
 - [ ] Install-Button-Logik ist integriert.
 - [ ] App startet offline nach erstem Online-Besuch.
@@ -773,10 +798,10 @@ Vor Abschluss diese Liste abarbeiten:
 2. `manifest.webmanifest` anlegen und JSON validieren.
 3. Manifest, Icons und Install-Button in `index.html` integrieren.
 4. `sw.js` mit App-Shell-Cache und API-network-only-Regel erstellen.
-5. Service Worker in `script.js` registrieren.
-6. Offline-/Online-Status in `script.js` integrieren.
-7. Install-Button-Logik in `script.js` integrieren.
-8. `.install-action` und ggf. Safe-Area-Details in `styles.css` stylen.
+5. Service Worker in `src/app/pwa.js` registrieren und aus `src/main.js` aufrufen.
+6. Offline-/Online-Status in `src/app/pwa.js` integrieren.
+7. Install-Button-Logik in `src/app/pwa.js` integrieren.
+8. `.install-action` und ggf. Safe-Area-Details in `src/styles/main.css` stylen.
 9. Lokalen Server starten.
 10. Browser- und Offline-Tests durchfuehren.
 11. Gefundene Fehler beheben.

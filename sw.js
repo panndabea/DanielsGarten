@@ -1,12 +1,17 @@
 const CACHE_PREFIX = 'gartenzeit-';
-const APP_CACHE = `${CACHE_PREFIX}app-v3`;
+const APP_CACHE = `${CACHE_PREFIX}app-v5`;
 
 const APP_SHELL = [
   './',
   './index.html',
-  './styles.css',
-  './tasks.js',
-  './script.js',
+  './src/styles/main.css',
+  './src/main.js',
+  './src/app/dom.js',
+  './src/app/pwa.js',
+  './src/app/ui.js',
+  './src/domain/task-engine.js',
+  './src/services/weather.js',
+  './src/data/tasks.js',
   './manifest.webmanifest',
   './assets/gartenzeit-hero.png',
   './assets/icons/icon-192.png',
