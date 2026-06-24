@@ -44,7 +44,13 @@ export function createUi(elements, state, gardenLabels) {
     elements.emptyText.textContent = `${state.location.label} ist vorausgewählt; Standortfreigabe ist optional.`;
     elements.taskList.replaceChildren();
     elements.emptyState.classList.add('is-visible');
-    setStatus('Bereit.');
+    setAgentStatus({
+      step: 'Zeit wählen',
+      last: `${state.location.label} vorausgewählt`,
+      next: 'Zeitfenster antippen',
+      status: 'Bereit.'
+    });
+    updateActionState();
   }
 
   function renderWeather(weather) {
@@ -90,6 +96,12 @@ export function createUi(elements, state, gardenLabels) {
     elements.emptyText.textContent = 'Wenn sich Wetter oder Zeitfenster ändern, berechnen wir die Vorschläge neu.';
     elements.taskList.replaceChildren(...tasks.map((item, index) => createTaskCard(item, index)));
     elements.emptyState.classList.toggle('is-visible', !tasks.length);
+    setAgentStatus({
+      step: tasks.length ? 'Vorschlag bereit' : 'Ruhemodus',
+      last: tasks.length ? `${tasks.length} Vorschläge berechnet` : 'Keine dringende Aufgabe gefunden',
+      next: tasks.length ? 'Aufgabe markieren oder aktualisieren' : 'Zeit oder Garten ändern'
+    });
+
     if (tasks.length) {
       setStatus(`${tasks.length} Vorschläge für ${typeText}${fallbackText}.`);
     } else {
@@ -99,11 +111,17 @@ export function createUi(elements, state, gardenLabels) {
 
   function setBusy(isBusy, message) {
     state.busy = isBusy;
+    updateActionState();
     elements.regenerateButton.disabled = isBusy;
     elements.useGps.disabled = isBusy;
     elements.searchCity.disabled = isBusy;
     if (isBusy) {
       setMascot('thinking', busyMascotMessage(message, mascotCopy));
+      setAgentStatus({
+        step: busyStep(message),
+        last: shortMinutesLabel(state.minutes),
+        next: 'Vorschläge berechnen'
+      });
     }
     if (message) setStatus(message);
   }
@@ -112,6 +130,24 @@ export function createUi(elements, state, gardenLabels) {
     if (!elements.statusLine) return;
 
     elements.statusLine.textContent = message;
+  }
+
+  function setAgentStatus({ step, last, next, status } = {}) {
+    if (step && elements.agentStep) {
+      elements.agentStep.textContent = step;
+    }
+
+    if (last && elements.agentLast) {
+      elements.agentLast.textContent = last;
+    }
+
+    if (next && elements.agentNext) {
+      elements.agentNext.textContent = next;
+    }
+
+    if (status) {
+      setStatus(status);
+    }
   }
 
   function setMascot(stateName, message) {
@@ -134,6 +170,7 @@ export function createUi(elements, state, gardenLabels) {
     if (!state.hasGenerated) {
       elements.contextLabel.textContent = contextLabelText(state.location, state.minutes);
     }
+    updateActionState();
   }
 
   function updateTimeButtons() {
@@ -162,12 +199,28 @@ export function createUi(elements, state, gardenLabels) {
     });
   }
 
+  function updateActionState() {
+    const hasMinutes = Number.isFinite(state.minutes) && state.minutes >= 5;
+    const copy = actionButtonCopy({
+      isBusy: state.busy,
+      hasMinutes
+    });
+
+    if (!elements.generateButton) return;
+
+    elements.generateButton.disabled = copy.disabled;
+    elements.generateButton.classList.toggle('is-loading', state.busy);
+    elements.generateButtonIcon.textContent = copy.icon;
+    elements.generateButtonLabel.textContent = copy.label;
+  }
+
   return {
     renderIntroState,
     renderWeather,
     renderTasks,
     setBusy,
     setStatus,
+    setAgentStatus,
     setMascot,
     updateFlowSignal,
     updateTimeButtons,
@@ -340,4 +393,20 @@ function minutesLabel(minutes) {
 
 function shortMinutesLabel(minutes) {
   return Number.isFinite(minutes) ? `${minutes} min` : 'Zeit wählen';
+}
+
+export function actionButtonCopy({ isBusy, hasMinutes }) {
+  if (isBusy) {
+    return { icon: '↻', label: 'Berechne...', disabled: true };
+  }
+
+  if (!hasMinutes) {
+    return { icon: '→', label: 'Zeitfenster wählen', disabled: true };
+  }
+
+  return {
+    icon: '↻',
+    label: 'Vorschlag aktualisieren',
+    disabled: false
+  };
 }

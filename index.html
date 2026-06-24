@@ -188,7 +188,28 @@
             </div>
           </details>
 
-          <p class="visually-hidden" id="statusLine" aria-live="polite">Bereit.</p>
+          <div class="planner-actions" hidden aria-hidden="true">
+            <button class="primary-action" id="generateButton" type="submit" disabled>
+              <span class="button-icon" id="generateButtonIcon" aria-hidden="true">→</span>
+              <span id="generateButtonLabel">Zeitfenster wählen</span>
+            </button>
+            <dl class="agent-status" aria-label="Agentenstatus">
+              <div class="agent-status-item">
+                <dt>Schritt</dt>
+                <dd id="agentStep">Zeit wählen</dd>
+              </div>
+              <div class="agent-status-item">
+                <dt>Letzte Aktion</dt>
+                <dd id="agentLast">Berlin vorausgewählt</dd>
+              </div>
+              <div class="agent-status-item">
+                <dt>Nächste Aktion</dt>
+                <dd id="agentNext">Zeitfenster antippen</dd>
+              </div>
+            </dl>
+            <p class="status-line" id="statusLine" aria-live="polite">Bereit.</p>
+            <p class="privacy-line">Ohne Konto. Standort bleibt in dieser Sitzung.</p>
+          </div>
         </div>
       </form>
     </section>

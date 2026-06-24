@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mascotWeatherMood, weatherMascotMessage } from '../src/app/ui.js';
+import { actionButtonCopy, mascotWeatherMood, weatherMascotMessage } from '../src/app/ui.js';
 
 const calmWeather = {
   source: 'Open-Meteo',
@@ -62,4 +62,36 @@ test('weatherMascotMessage uses the mood-specific copy', () => {
 
   assert.equal(weatherMascotMessage({ ...calmWeather, isDry: true }, copy), 'Trocken');
   assert.equal(weatherMascotMessage(null, copy), 'Start');
+});
+
+test('actionButtonCopy matches the automatic recommendation flow', () => {
+  assert.deepEqual(actionButtonCopy({
+    isBusy: false,
+    hasMinutes: false,
+    hasGenerated: false
+  }), {
+    icon: '→',
+    label: 'Zeitfenster wählen',
+    disabled: true
+  });
+
+  assert.deepEqual(actionButtonCopy({
+    isBusy: false,
+    hasMinutes: true,
+    hasGenerated: false
+  }), {
+    icon: '↻',
+    label: 'Vorschlag aktualisieren',
+    disabled: false
+  });
+
+  assert.deepEqual(actionButtonCopy({
+    isBusy: true,
+    hasMinutes: true,
+    hasGenerated: true
+  }), {
+    icon: '↻',
+    label: 'Berechne...',
+    disabled: true
+  });
 });
