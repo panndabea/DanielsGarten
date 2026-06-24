@@ -5,7 +5,16 @@ export function createUi(elements, state, gardenLabels) {
     happy: 'Das lohnt sich heute wirklich.',
     resting: 'Heute darf dein Garten einfach atmen.',
     done: 'Schön gemacht.',
-    weather: 'Ich nutze heute Saisonwissen.'
+    weather: 'Ich nutze heute Saisonwissen.',
+    fallback: 'Saisonwissen an: ich bleibe aufmerksam.',
+    frost: 'Frost im Blick: ich ziehe die Blätter ein.',
+    wind: 'Windiger Tag: ich halte mich gut fest.',
+    rain: 'Regenmodus: ich trage Tropfen mit Haltung.',
+    wet: 'Alles feucht: ich stehe lieber etwas erhöht.',
+    rainSoon: 'Vielleicht später Regen: ich halte den Himmel im Blick.',
+    hot: 'Hitzetag: ich mache kleinen Schatten.',
+    dry: 'Trockenmodus: heute zählt jeder Tropfen.',
+    mild: 'Ruhiges Wetter: ich wachse ganz entspannt.'
   };
   let resultMascot = { state: 'idle', message: mascotCopy.idle };
 
@@ -20,6 +29,7 @@ export function createUi(elements, state, gardenLabels) {
 
   function renderIntroState() {
     resultMascot = { state: 'idle', message: mascotCopy.idle };
+    setMascotWeather(null);
     setMascot(resultMascot.state, resultMascot.message);
     updateFlowSignal();
     updateSettingsSummary();
@@ -37,6 +47,7 @@ export function createUi(elements, state, gardenLabels) {
 
   function renderWeather(weather) {
     if (!weather) {
+      setMascotWeather(null);
       elements.tempValue.textContent = '--';
       elements.rainPastValue.textContent = '--';
       elements.rainFutureValue.textContent = '--';
@@ -46,6 +57,7 @@ export function createUi(elements, state, gardenLabels) {
       return;
     }
 
+    setMascotWeather(weather);
     elements.tempValue.textContent = `${Math.round(weather.temperature)} °C`;
     elements.rainPastValue.textContent = `${Math.round(weather.pastRain)} mm`;
     elements.rainFutureValue.textContent = `${Math.round(weather.forecastRain)} mm`;
@@ -109,6 +121,12 @@ export function createUi(elements, state, gardenLabels) {
     if (message) {
       elements.mascotBubble.textContent = message;
     }
+  }
+
+  function setMascotWeather(weather) {
+    if (!elements.mascot) return;
+
+    elements.mascot.dataset.weatherMood = mascotWeatherMood(weather);
   }
 
   function updateFlowSignal() {
@@ -237,17 +255,15 @@ function taskMascotState(tasks, context, copy) {
   if (!tasks.length) {
     return {
       state: 'resting',
-      message: context.weather.source === 'Open-Meteo'
-        ? copy.resting
-        : 'Saisonwissen sagt: heute darf dein Garten atmen.'
+      message: weatherMascotMessage(context.weather, copy)
     };
   }
 
   if (context.weather.source !== 'Open-Meteo') {
-    return { state: 'weather', message: copy.weather };
+    return { state: 'weather', message: weatherMascotMessage(context.weather, copy) };
   }
 
-  return { state: 'happy', message: copy.happy };
+  return { state: 'happy', message: weatherMascotMessage(context.weather, copy) };
 }
 
 function busyMascotMessage(message, copy) {
@@ -283,6 +299,25 @@ function weatherSummaryText(weather) {
   const sourceText = weather.source === 'Open-Meteo' ? 'Wetter' : 'Saison-Fallback';
 
   return `${sourceText}: ${Math.round(weather.temperature)} °C, ${rainText}${windText}. Details anzeigen`;
+}
+
+export function mascotWeatherMood(weather) {
+  if (!weather) return 'idle';
+  if (weather.frostRisk !== 'niedrig') return 'frost';
+  if (weather.isWindy) return 'wind';
+  if (weather.isRainingNow) return 'rain';
+  if (weather.isWet) return 'wet';
+  if (weather.isHot) return 'hot';
+  if (weather.isDry) return 'dry';
+  if (weather.rainSoon) return 'rainSoon';
+  if (weather.source !== 'Open-Meteo') return 'fallback';
+  if (weather.isMild) return 'mild';
+  return 'mild';
+}
+
+export function weatherMascotMessage(weather, copy) {
+  const mood = mascotWeatherMood(weather);
+  return copy[mood] || copy.happy;
 }
 
 function contextLabelText(location, minutes) {
