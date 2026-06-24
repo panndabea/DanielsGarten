@@ -1,5 +1,5 @@
 const CACHE_PREFIX = 'gartenzeit-';
-const APP_CACHE = `${CACHE_PREFIX}app-v13`;
+const APP_CACHE = `${CACHE_PREFIX}app-v14`;
 
 const APP_SHELL = [
   './',
