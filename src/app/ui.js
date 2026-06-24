@@ -117,12 +117,12 @@ export function createUi(elements, state, gardenLabels) {
 
     elements.resultsPanel.hidden = false;
     elements.resultsPanel.classList.remove('is-intro');
-    elements.contextLabel.textContent = 'Passend für dein heutiges Gartenfenster';
+    elements.contextLabel.textContent = '';
     elements.resultTitle.textContent = tasks.length
-      ? `${minutesLabel(context.minutes)} in ${context.location.label}`
+      ? 'Das könntest Du heute im Garten machen'
       : 'Heute nichts Dringendes';
     elements.resultSummary.textContent = tasks.length
-      ? resultSummaryText(tasks.length)
+      ? ''
       : 'Heute darf der Garten einfach Garten sein. Wenn sich Wetter oder Zeitfenster ändern, rechnen wir neu.';
     elements.regenerateButton.hidden = false;
     elements.weatherDetails.hidden = false;
@@ -355,12 +355,6 @@ function createTaskCard(item, index = 0) {
   action.append(doneButton);
   article.append(content, action);
   return article;
-}
-
-function resultSummaryText(taskCount) {
-  return taskCount === 1
-    ? 'Ein Vorschlag, ruhig nach Dringlichkeit einsortiert.'
-    : `${taskCount} Vorschläge, ruhig nach Dringlichkeit sortiert.`;
 }
 
 function taskMascotState(tasks, context, copy) {

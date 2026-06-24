@@ -977,6 +977,21 @@ select {
   padding-block: 1px 3px;
 }
 
+.results-panel:not(.is-intro) .result-heading h2 {
+  max-width: 760px;
+  color: color-mix(in srgb, var(--ink) 74%, var(--muted));
+  font-family: Georgia, "Times New Roman", ui-serif, serif;
+  font-size: clamp(1.18rem, 2.2vw, 1.62rem);
+  font-style: italic;
+  font-weight: 580;
+  line-height: 1.34;
+}
+
+.results-panel:not(.is-intro) .kicker:empty,
+.results-panel:not(.is-intro) .result-summary:empty {
+  display: none;
+}
+
 .results-panel:not(.is-intro) .kicker {
   max-width: 720px;
   color: color-mix(in srgb, var(--leaf-strong) 82%, var(--muted));
