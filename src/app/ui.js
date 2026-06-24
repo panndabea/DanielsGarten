@@ -111,19 +111,18 @@ export function createUi(elements, state, gardenLabels) {
 
   function renderTasks(tasks, context) {
     const typeText = context.selectedTypes.map(type => gardenLabels[type]).join(', ');
-    const sourceText = context.weather.source === 'Open-Meteo' ? 'Wetter' : 'Saison';
     const fallbackText = context.weather.source === 'Open-Meteo' ? '' : ' mit saisonalem Fallback';
     resultMascot = taskMascotState(tasks, context, mascotCopy);
     setMascot(resultMascot.state, resultMascot.message);
 
     elements.resultsPanel.hidden = false;
     elements.resultsPanel.classList.remove('is-intro');
-    elements.contextLabel.textContent = `${contextLabelText(context.location, context.minutes)} · ${sourceText}`;
+    elements.contextLabel.textContent = 'Passend für dein heutiges Gartenfenster';
     elements.resultTitle.textContent = tasks.length
       ? `${minutesLabel(context.minutes)} in ${context.location.label}`
       : 'Heute nichts Dringendes';
     elements.resultSummary.textContent = tasks.length
-      ? resultSummaryText(tasks.length, context.weather.source)
+      ? resultSummaryText(tasks.length)
       : 'Heute darf der Garten einfach Garten sein. Wenn sich Wetter oder Zeitfenster ändern, rechnen wir neu.';
     elements.regenerateButton.hidden = false;
     elements.weatherDetails.hidden = false;
@@ -358,13 +357,10 @@ function createTaskCard(item, index = 0) {
   return article;
 }
 
-function resultSummaryText(taskCount, weatherSource) {
-  const sourceText = weatherSource === 'Open-Meteo'
-    ? 'Wetter und Zeitfenster sind berücksichtigt.'
-    : 'Saison und Zeitfenster sind berücksichtigt.';
+function resultSummaryText(taskCount) {
   return taskCount === 1
-    ? `Ein Vorschlag ist bereit. ${sourceText}`
-    : `${taskCount} Vorschläge sind nach Dringlichkeit sortiert. ${sourceText}`;
+    ? 'Ein Vorschlag, ruhig nach Dringlichkeit einsortiert.'
+    : `${taskCount} Vorschläge, ruhig nach Dringlichkeit sortiert.`;
 }
 
 function taskMascotState(tasks, context, copy) {
