@@ -1717,6 +1717,7 @@ body[data-design="french"] .empty-state {
   }
 
   .hero-content {
+    gap: 16px;
     padding: 18px;
   }
 
@@ -1725,11 +1726,49 @@ body[data-design="french"] .empty-state {
   }
 
   .mascot-stage {
-    min-height: 132px;
+    display: grid;
+    grid-template-columns: 96px minmax(0, 1fr);
+    align-items: center;
+    gap: 10px 12px;
+    max-width: 100%;
+    min-height: 0;
+  }
+
+  .mascot-dialog {
+    display: contents;
+  }
+
+  .mascot {
+    width: 100%;
+    max-width: 96px;
+    justify-self: center;
   }
 
   .mascot-bubble {
-    max-width: 280px;
+    width: 100%;
+    max-width: none;
+  }
+
+  .time-field {
+    grid-column: 1 / -1;
+    width: 100%;
+    max-width: none;
+  }
+
+  .time-field .segmented {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 6px;
+    overflow: visible;
+    padding: 0;
+  }
+
+  .time-option {
+    width: 100%;
+    min-width: 0;
+    min-height: 32px;
+    padding: 0 6px;
+    white-space: nowrap;
   }
 
   h1 {
@@ -1806,16 +1845,36 @@ body[data-design="french"] .empty-state {
     opacity: .22;
   }
 
+  body[data-design="french"] .hero-panel,
   body[data-design="french"] .hero-content {
-    padding: 22px;
+    min-height: 0;
+  }
+
+  body[data-design="french"] .hero-content {
+    gap: 16px;
+    padding: 18px;
   }
 
   body[data-design="french"] .mascot {
-    width: 108px;
+    width: 100%;
+    max-width: 96px;
   }
 
   body[data-design="french"] .mascot-stage {
-    min-height: 124px;
+    min-height: 0;
+  }
+
+  body[data-design="french"] .mascot-bubble {
+    max-width: none;
+  }
+
+  body[data-design="french"] .time-field {
+    max-width: none;
+  }
+
+  body[data-design="french"] .time-option {
+    min-height: 32px;
+    padding: 0 6px;
   }
 
   body[data-design="french"] .tagline {
@@ -1866,10 +1925,10 @@ body[data-design="french"] .empty-state {
 
   .mascot-stage {
     display: grid;
-    grid-template-columns: 86px minmax(0, 1fr);
+    grid-template-columns: 76px minmax(0, 1fr);
     align-items: center;
-    gap: 10px;
-    min-height: 100px;
+    gap: 8px;
+    min-height: 0;
   }
 
   .mascot-dialog {
@@ -1877,7 +1936,8 @@ body[data-design="french"] .empty-state {
   }
 
   .mascot {
-    width: 94px;
+    width: 100%;
+    max-width: 76px;
   }
 
   .agent-status {
@@ -1951,12 +2011,18 @@ body[data-design="french"] .empty-state {
     padding: 16px;
   }
 
+  body[data-design="french"] .hero-panel,
+  body[data-design="french"] .hero-content {
+    min-height: 0;
+  }
+
   body[data-design="french"] .mascot {
-    width: 80px;
+    width: 100%;
+    max-width: 76px;
   }
 
   body[data-design="french"] .mascot-stage {
-    min-height: 96px;
+    min-height: 0;
   }
 
   body[data-design="french"] .planner-panel::before {
@@ -1970,13 +2036,35 @@ body[data-design="french"] .empty-state {
     display: none;
   }
 
+  .mascot-stage {
+    grid-template-columns: 66px minmax(0, 1fr);
+    gap: 7px;
+  }
+
   .mascot {
-    width: 86px;
+    width: 100%;
+    max-width: 66px;
   }
 
   .mascot-bubble {
     padding: 9px 10px;
     font-size: .82rem;
+  }
+
+  .time-field .segmented {
+    gap: 4px;
+  }
+
+  .time-option,
+  body[data-design="french"] .time-option {
+    min-height: 28px;
+    padding: 0 2px;
+    font-size: .68rem;
+  }
+
+  body[data-design="french"] .mascot {
+    width: 100%;
+    max-width: 66px;
   }
 }
 
