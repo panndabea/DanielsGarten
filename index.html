@@ -52,8 +52,12 @@
       <img class="hero-image" src="assets/gartenzeit-hero.png" width="1672" height="941" fetchpriority="high" alt="" aria-hidden="true" />
       <div class="hero-scrim" aria-hidden="true"></div>
 
-      <div class="hero-content">
+      <form class="hero-content" id="plannerForm" aria-labelledby="plannerHeading">
         <div class="hero-copy">
+          <h1 class="visually-hidden" id="appTitle">Gartenzeit</h1>
+          <h2 class="visually-hidden" id="plannerHeading">Zeitfenster wählen</h2>
+          <span class="visually-hidden" id="flowSignal">Zeit wählen</span>
+
           <div class="mascot-stage" aria-label="Gartenzeit Begleiter">
             <div class="mascot" id="mascot" data-mascot-state="idle" aria-hidden="true">
               <span class="mascot-pot"></span>
@@ -74,37 +78,23 @@
               <span class="mascot-weather mascot-weather-frost"></span>
               <span class="mascot-weather mascot-weather-puddle"></span>
             </div>
-            <p class="mascot-bubble" id="mascotBubble">Wie viel Gartenzeit hast du heute?</p>
+            <div class="mascot-dialog">
+              <p class="mascot-bubble" id="mascotBubble">Wie viel Gartenzeit hast du heute?</p>
+
+              <fieldset class="field-group time-field">
+                <legend class="visually-hidden">Zeitfenster wählen</legend>
+                <div class="segmented" role="group" aria-label="Zeitbudget wählen">
+                  <button class="time-option" type="button" data-minutes="10" aria-pressed="false">10 min</button>
+                  <button class="time-option" type="button" data-minutes="20" aria-pressed="false">20 min</button>
+                  <button class="time-option" type="button" data-minutes="30" aria-pressed="false">30 min</button>
+                  <button class="time-option" type="button" data-minutes="60" aria-pressed="false">60 min</button>
+                </div>
+              </fieldset>
+            </div>
           </div>
-          <h1 id="appTitle">Was lohnt sich heute im Garten?</h1>
-          <p class="tagline">Wähle deine Zeit. Gartenzeit prüft Wetter und Saison und gibt dir eine Aufgabe, die heute passt.</p>
         </div>
 
-        <form class="planner-panel" id="plannerForm" aria-labelledby="plannerHeading">
-          <div class="planner-head">
-            <p class="panel-label">Schritt 1</p>
-            <h2 id="plannerHeading">Zeitfenster wählen</h2>
-            <span class="flow-signal" id="flowSignal">Zeit wählen</span>
-          </div>
-
-          <fieldset class="field-group time-field">
-            <legend class="visually-hidden">Zeitfenster wählen</legend>
-            <div class="segmented" role="group" aria-label="Zeitbudget wählen">
-              <button class="time-option" type="button" data-minutes="10" aria-pressed="false">10 min</button>
-              <button class="time-option" type="button" data-minutes="20" aria-pressed="false">20 min</button>
-              <button class="time-option" type="button" data-minutes="30" aria-pressed="false">30 min</button>
-              <button class="time-option" type="button" data-minutes="60" aria-pressed="false">60 min</button>
-            </div>
-            <details class="optional-disclosure">
-              <summary>Andere Zeit eingeben</summary>
-              <label class="input-label compact-input" for="customMinutes">
-                Freie Eingabe
-                <input id="customMinutes" name="customMinutes" type="number" min="5" max="180" step="5" inputmode="numeric" placeholder="Minuten" />
-              </label>
-              <p class="field-feedback" id="minutesFeedback" aria-live="polite"></p>
-            </details>
-          </fieldset>
-
+        <div class="planner-panel">
           <details class="settings-disclosure" id="settingsDetails">
             <summary>
               <span class="settings-summary">
@@ -116,6 +106,15 @@
             </summary>
 
             <div class="settings-panel">
+              <details class="optional-disclosure">
+                <summary>Andere Zeit eingeben</summary>
+                <label class="input-label compact-input" for="customMinutes">
+                  Freie Eingabe
+                  <input id="customMinutes" name="customMinutes" type="number" min="5" max="180" step="5" inputmode="numeric" placeholder="Minuten" />
+                </label>
+                <p class="field-feedback" id="minutesFeedback" aria-live="polite"></p>
+              </details>
+
               <fieldset class="field-group">
                 <legend>Gartentyp</legend>
                 <div class="type-grid" id="gardenTypes">
@@ -189,30 +188,9 @@
             </div>
           </details>
 
-          <div class="planner-actions">
-            <button class="primary-action" id="generateButton" type="submit" disabled>
-              <span class="button-icon" id="generateButtonIcon" aria-hidden="true">→</span>
-              <span id="generateButtonLabel">Zeitfenster wählen</span>
-            </button>
-            <dl class="agent-status" aria-label="Agentenstatus">
-              <div class="agent-status-item">
-                <dt>Schritt</dt>
-                <dd id="agentStep">Zeit wählen</dd>
-              </div>
-              <div class="agent-status-item">
-                <dt>Letzte Aktion</dt>
-                <dd id="agentLast">Berlin vorausgewählt</dd>
-              </div>
-              <div class="agent-status-item">
-                <dt>Nächste Aktion</dt>
-                <dd id="agentNext">Zeitfenster antippen</dd>
-              </div>
-            </dl>
-            <p class="status-line" id="statusLine" aria-live="polite">Bereit.</p>
-            <p class="privacy-line">Ohne Konto. Standort bleibt in dieser Sitzung.</p>
-          </div>
-        </form>
-      </div>
+          <p class="visually-hidden" id="statusLine" aria-live="polite">Bereit.</p>
+        </div>
+      </form>
     </section>
 
     <section class="results-panel is-intro" id="resultsPanel" aria-labelledby="resultTitle">
@@ -228,7 +206,7 @@
       <div class="task-list" id="taskList" aria-live="polite"></div>
 
       <div class="empty-state" id="emptyState">
-        <p class="kicker" id="emptyKicker">Schritt 1</p>
+        <p class="kicker" id="emptyKicker">Bereit</p>
         <h3 id="emptyTitle">Zeit wählen</h3>
         <p id="emptyText">Berlin ist vorausgewählt; Standortfreigabe ist optional.</p>
       </div>
