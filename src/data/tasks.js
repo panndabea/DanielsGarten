@@ -1,4 +1,4 @@
-export const TASKS = [
+const CORE_TASKS = [
   {
     id: 'water-check',
     title: 'Gießbedarf prüfen',
@@ -314,7 +314,7 @@ export const TASKS = [
   }
 ];
 
-TASKS.push(...[
+const ADDITIONAL_TASKS = [
   {
     id: 'rain-barrel-check',
     title: 'Regentonne vorbereiten',
@@ -1610,4 +1610,6 @@ TASKS.push(...[
       { when: ctx => ctx.weather.isMild, points: 8, why: 'Vor der nächsten Mährunde lohnt ein kurzer Check.' }
     ]
   }
-]);
+];
+
+export const TASKS = [...CORE_TASKS, ...ADDITIONAL_TASKS];

@@ -1,45 +1,11 @@
-const mascotVisualAssets = {
-  idle: {
-    animated: 'assets/character/plant-pot-mascot-idle-breathe.webp',
-    static: 'assets/character/plant-pot-mascot-idle.png'
-  },
-  wave: {
-    animated: 'assets/character/plant-pot-mascot-wave-loop.webp',
-    static: 'assets/character/plant-pot-mascot-wave.png'
-  },
-  watering: {
-    animated: 'assets/character/plant-pot-mascot-watering-loop.webp',
-    static: 'assets/character/plant-pot-mascot-watering.png'
-  },
-  bounce: {
-    animated: 'assets/character/plant-pot-mascot-bounce-loop.webp',
-    static: 'assets/character/plant-pot-mascot-bounce.png'
-  },
-  wilted: {
-    animated: 'assets/character/plant-pot-mascot-wilted-sway.webp',
-    static: 'assets/character/plant-pot-mascot-wilted.png'
-  }
-};
+import { MIN_MINUTES } from '../data/app-config.js';
+import { busyMascotMessage, busyStep, MASCOT_COPY, mascotVisualFor, mascotVisualNameFor, mascotWeatherMood, taskMascotState } from './mascot.js';
+import { createTaskCard } from './task-card.js';
+
+export { mascotVisualFor, mascotVisualNameFor, mascotWeatherMood, weatherMascotMessage } from './mascot.js';
 
 export function createUi(elements, state, gardenLabels) {
-  const mascotCopy = {
-    idle: 'Wie viel Gartenzeit hast du heute?',
-    thinking: 'Ich schaue kurz aufs Wetter.',
-    happy: 'Das lohnt sich heute wirklich.',
-    resting: 'Heute darf dein Garten einfach atmen.',
-    done: 'Schön gemacht.',
-    weather: 'Ich nutze heute Saisonwissen.',
-    fallback: 'Saisonwissen an: ich bleibe aufmerksam.',
-    frost: 'Frost im Blick: ich ziehe die Blätter ein.',
-    wind: 'Windiger Tag: ich halte mich gut fest.',
-    rain: 'Regenmodus: ich trage Tropfen mit Haltung.',
-    wet: 'Alles feucht: ich stehe lieber etwas erhöht.',
-    rainSoon: 'Vielleicht später Regen: ich halte den Himmel im Blick.',
-    hot: 'Hitzetag: ich mache kleinen Schatten.',
-    dry: 'Trockenmodus: heute zählt jeder Tropfen.',
-    mild: 'Ruhiges Wetter: ich wachse ganz entspannt.'
-  };
-  let resultMascot = { state: 'idle', message: mascotCopy.idle };
+  let resultMascot = { state: 'idle', message: MASCOT_COPY.idle };
   let currentMascotState = 'idle';
   let currentWeatherMood = 'idle';
   const reducedMotionQuery = typeof window !== 'undefined' && window.matchMedia
@@ -54,7 +20,7 @@ export function createUi(elements, state, gardenLabels) {
 
   elements.taskList.addEventListener('taskdone', event => {
     if (event.detail?.isDone) {
-      setMascot('done', mascotCopy.done);
+      setMascot('done', MASCOT_COPY.done);
       return;
     }
 
@@ -62,7 +28,7 @@ export function createUi(elements, state, gardenLabels) {
   });
 
   function renderIntroState() {
-    resultMascot = { state: 'idle', message: mascotCopy.idle };
+    resultMascot = { state: 'idle', message: MASCOT_COPY.idle };
     setMascotWeather(null);
     setMascot(resultMascot.state, resultMascot.message);
     updateFlowSignal();
@@ -112,7 +78,7 @@ export function createUi(elements, state, gardenLabels) {
   function renderTasks(tasks, context) {
     const typeText = context.selectedTypes.map(type => gardenLabels[type]).join(', ');
     const fallbackText = context.weather.source === 'Open-Meteo' ? '' : ' mit saisonalem Fallback';
-    resultMascot = taskMascotState(tasks, context, mascotCopy);
+    resultMascot = taskMascotState(tasks, context, MASCOT_COPY);
     setMascot(resultMascot.state, resultMascot.message);
 
     elements.resultsPanel.hidden = false;
@@ -151,7 +117,7 @@ export function createUi(elements, state, gardenLabels) {
     elements.useGps.disabled = isBusy;
     elements.searchCity.disabled = isBusy;
     if (isBusy) {
-      setMascot('thinking', busyMascotMessage(message, mascotCopy));
+      setMascot('thinking', busyMascotMessage(message, MASCOT_COPY));
       setAgentStatus({
         step: busyStep(message),
         last: shortMinutesLabel(state.minutes),
@@ -250,7 +216,7 @@ export function createUi(elements, state, gardenLabels) {
   }
 
   function updateActionState() {
-    const hasMinutes = Number.isFinite(state.minutes) && state.minutes >= 5;
+    const hasMinutes = Number.isFinite(state.minutes) && state.minutes >= MIN_MINUTES;
     const copy = actionButtonCopy({
       isBusy: state.busy,
       hasMinutes
@@ -279,129 +245,6 @@ export function createUi(elements, state, gardenLabels) {
   };
 }
 
-function createTaskCard(item, index = 0) {
-  const article = document.createElement('article');
-  article.className = `task-card ${item.priority.className}${index === 0 ? ' is-featured' : ''}`;
-  article.dataset.taskId = item.task.id;
-
-  const meta = document.createElement('div');
-  meta.className = 'task-top';
-  meta.append(
-    pill(item.priority.label, 'priority-pill'),
-    pill(`${item.task.duration} min`, 'task-pill'),
-    pill(item.task.difficulty, 'task-pill')
-  );
-
-  const title = document.createElement('h3');
-  title.textContent = item.task.title;
-
-  const reason = document.createElement('p');
-  reason.className = 'task-reason';
-  reason.textContent = item.reason;
-
-  const more = document.createElement('details');
-  more.className = 'task-more';
-
-  const moreSummary = document.createElement('summary');
-  moreSummary.textContent = 'Details';
-
-  const details = document.createElement('dl');
-  details.className = 'task-details';
-  details.append(
-    detailBlock('Aufgabe', item.task.description),
-    detailBlock('Priorität', item.priority.meaning),
-    detailBlock('Werkzeug', item.task.tools.join(', '))
-  );
-  more.append(moreSummary, details);
-
-  const content = document.createElement('div');
-  content.className = 'task-content';
-  if (index === 0) {
-    const eyebrow = document.createElement('p');
-    eyebrow.className = 'task-eyebrow';
-    eyebrow.textContent = 'Jetzt zuerst';
-    content.append(eyebrow);
-  }
-
-  content.append(meta, title, reason, more);
-
-  const action = document.createElement('div');
-  action.className = 'task-action';
-
-  const doneButton = document.createElement('button');
-  doneButton.className = 'task-done';
-  doneButton.type = 'button';
-  doneButton.setAttribute('aria-pressed', 'false');
-
-  const doneIcon = document.createElement('span');
-  doneIcon.setAttribute('aria-hidden', 'true');
-  doneIcon.textContent = '✓';
-
-  const doneLabel = document.createElement('span');
-  doneLabel.textContent = 'Erledigt markieren';
-
-  doneButton.append(doneIcon, doneLabel);
-  doneButton.addEventListener('click', () => {
-    const isDone = article.classList.toggle('is-done');
-    doneButton.setAttribute('aria-pressed', String(isDone));
-    doneLabel.textContent = isDone ? 'Erledigt' : 'Erledigt markieren';
-    more.open = !isDone && more.open;
-    article.dispatchEvent(new CustomEvent('taskdone', {
-      bubbles: true,
-      detail: { isDone, taskId: item.task.id }
-    }));
-  });
-
-  action.append(doneButton);
-  article.append(content, action);
-  return article;
-}
-
-function taskMascotState(tasks, context, copy) {
-  if (!tasks.length) {
-    return {
-      state: 'resting',
-      message: weatherMascotMessage(context.weather, copy)
-    };
-  }
-
-  if (context.weather.source !== 'Open-Meteo') {
-    return { state: 'weather', message: weatherMascotMessage(context.weather, copy) };
-  }
-
-  return { state: 'happy', message: weatherMascotMessage(context.weather, copy) };
-}
-
-function busyMascotMessage(message, copy) {
-  if (message?.includes('Stadt')) return 'Ich suche deine Stadt.';
-  if (message?.includes('Standort')) return 'Ich warte kurz auf den Standort.';
-  return copy.thinking;
-}
-
-function busyStep(message) {
-  if (message?.includes('Stadt')) return 'Stadt suchen';
-  if (message?.includes('Standort')) return 'Standort prüfen';
-  if (message?.includes('Wetter')) return 'Wetter prüfen';
-  return 'Berechnen';
-}
-
-function pill(text, className) {
-  const span = document.createElement('span');
-  span.className = className;
-  span.textContent = text;
-  return span;
-}
-
-function detailBlock(term, description) {
-  const wrapper = document.createElement('div');
-  const dt = document.createElement('dt');
-  const dd = document.createElement('dd');
-  dt.textContent = term;
-  dd.textContent = description;
-  wrapper.append(dt, dd);
-  return wrapper;
-}
-
 function weatherSummaryText(weather) {
   const rainText = weather.isDry
     ? 'trocken'
@@ -412,42 +255,6 @@ function weatherSummaryText(weather) {
   const sourceText = weather.source === 'Open-Meteo' ? 'Wetter' : 'Saison-Fallback';
 
   return `${sourceText}: ${Math.round(weather.temperature)} °C, ${rainText}${windText}. Details anzeigen`;
-}
-
-export function mascotWeatherMood(weather) {
-  if (!weather) return 'idle';
-  if (weather.frostRisk !== 'niedrig') return 'frost';
-  if (weather.isWindy) return 'wind';
-  if (weather.isRainingNow) return 'rain';
-  if (weather.isWet) return 'wet';
-  if (weather.isHot) return 'hot';
-  if (weather.isDry) return 'dry';
-  if (weather.rainSoon) return 'rainSoon';
-  if (weather.source !== 'Open-Meteo') return 'fallback';
-  if (weather.isMild) return 'mild';
-  return 'mild';
-}
-
-export function weatherMascotMessage(weather, copy) {
-  const mood = mascotWeatherMood(weather);
-  return copy[mood] || copy.happy;
-}
-
-export function mascotVisualNameFor(stateName = 'idle', weatherMood = 'idle') {
-  if (stateName === 'thinking' || stateName === 'weather') return 'wave';
-  if (stateName === 'done') return 'bounce';
-  if (stateName === 'resting') return 'wilted';
-  if (weatherMood === 'frost' || weatherMood === 'wind') return 'wilted';
-  if (['dry', 'hot', 'rain', 'wet'].includes(weatherMood)) return 'watering';
-  if (weatherMood === 'rainSoon' || weatherMood === 'fallback') return 'wave';
-  if (stateName === 'happy') return 'bounce';
-  return 'idle';
-}
-
-export function mascotVisualFor(stateName = 'idle', weatherMood = 'idle', isReducedMotion = false) {
-  const visualName = mascotVisualNameFor(stateName, weatherMood);
-  const asset = mascotVisualAssets[visualName] || mascotVisualAssets.idle;
-  return isReducedMotion ? asset.static : asset.animated;
 }
 
 function contextLabelText(location, minutes) {

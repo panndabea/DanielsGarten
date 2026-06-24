@@ -1,14 +1,17 @@
 const CACHE_PREFIX = 'gartenzeit-';
-const APP_CACHE = `${CACHE_PREFIX}app-v21`;
+const APP_CACHE = `${CACHE_PREFIX}app-v22`;
 
 const APP_SHELL = [
   './',
   './index.html',
-  './src/styles/main.css?v=21',
+  './src/styles/main.css',
   './src/main.js',
   './src/app/dom.js',
+  './src/app/mascot.js',
   './src/app/pwa.js',
+  './src/app/task-card.js',
   './src/app/ui.js',
+  './src/data/app-config.js',
   './src/domain/task-engine.js',
   './src/services/weather.js',
   './src/data/tasks.js',

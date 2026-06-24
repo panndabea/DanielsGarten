@@ -2,34 +2,21 @@ import { getElements } from './app/dom.js';
 import { registerServiceWorker, setupInstallPrompt, setupNetworkStatus } from './app/pwa.js';
 import { buildContext, selectTasks } from './domain/task-engine.js';
 import { createUi } from './app/ui.js';
+import {
+  CITY_PRESETS,
+  CUSTOM_MINUTES_DEBOUNCE_MS,
+  DEFAULT_CITY,
+  DEFAULT_GARDEN_TYPE,
+  GARDEN_LABELS,
+  MAX_MINUTES,
+  MIN_MINUTES
+} from './data/app-config.js';
 import { fallbackWeather, fetchWeather, findCity } from './services/weather.js';
-
-const CITY_PRESETS = {
-  berlin: { label: 'Berlin', latitude: 52.52, longitude: 13.405 },
-  hamburg: { label: 'Hamburg', latitude: 53.5511, longitude: 9.9937 },
-  muenchen: { label: 'München', latitude: 48.1374, longitude: 11.5755 },
-  koeln: { label: 'Köln', latitude: 50.9375, longitude: 6.9603 },
-  frankfurt: { label: 'Frankfurt am Main', latitude: 50.1109, longitude: 8.6821 },
-  stuttgart: { label: 'Stuttgart', latitude: 48.7758, longitude: 9.1829 },
-  leipzig: { label: 'Leipzig', latitude: 51.3397, longitude: 12.3731 },
-  freiburg: { label: 'Freiburg', latitude: 47.999, longitude: 7.8421 }
-};
-
-const GARDEN_LABELS = {
-  balcony: 'Balkon',
-  small: 'Kleiner Garten',
-  garden: 'Garten',
-  vegetable: 'Gemüsegarten',
-  frontyard: 'Vorgarten',
-  lawn: 'Rasenfläche'
-};
-
-const CUSTOM_MINUTES_DEBOUNCE_MS = 350;
 
 const state = {
   minutes: null,
-  selectedTypes: new Set(['garden']),
-  location: CITY_PRESETS.berlin,
+  selectedTypes: new Set([DEFAULT_GARDEN_TYPE]),
+  location: DEFAULT_CITY,
   weather: null,
   busy: false,
   hasGenerated: false
@@ -96,18 +83,18 @@ function handleCustomMinutes() {
     return;
   }
 
-  if (!Number.isFinite(minutes) || minutes < 5) {
+  if (!Number.isFinite(minutes) || minutes < MIN_MINUTES) {
     state.minutes = null;
     clearRecommendationTimer();
     resetRecommendations();
-    elements.minutesFeedback.textContent = 'Mindestens 5 Minuten.';
+    elements.minutesFeedback.textContent = `Mindestens ${MIN_MINUTES} Minuten.`;
     ui.updateTimeButtons();
     return;
   }
 
-  state.minutes = Math.min(minutes, 180);
-  elements.minutesFeedback.textContent = minutes > 180
-    ? 'Maximal 180 Minuten. Ich rechne mit 180.'
+  state.minutes = Math.min(minutes, MAX_MINUTES);
+  elements.minutesFeedback.textContent = minutes > MAX_MINUTES
+    ? `Maximal ${MAX_MINUTES} Minuten. Ich rechne mit ${MAX_MINUTES}.`
     : '';
   ui.updateTimeButtons();
   ui.updateFlowSignal();
@@ -122,18 +109,18 @@ function normalizeCustomMinutes() {
   const minutes = Number(rawValue);
   if (!Number.isFinite(minutes)) return;
 
-  if (minutes < 5) {
-    elements.customMinutes.value = '5';
-    state.minutes = 5;
-    elements.minutesFeedback.textContent = 'Ich rechne mit 5 Minuten.';
+  if (minutes < MIN_MINUTES) {
+    elements.customMinutes.value = String(MIN_MINUTES);
+    state.minutes = MIN_MINUTES;
+    elements.minutesFeedback.textContent = `Ich rechne mit ${MIN_MINUTES} Minuten.`;
     ui.updateTimeButtons();
     ui.updateFlowSignal();
     markMinutesSelected(state.minutes);
     queueRecommendations();
-  } else if (minutes > 180) {
-    elements.customMinutes.value = '180';
-    state.minutes = 180;
-    elements.minutesFeedback.textContent = 'Ich rechne mit maximal 180 Minuten.';
+  } else if (minutes > MAX_MINUTES) {
+    elements.customMinutes.value = String(MAX_MINUTES);
+    state.minutes = MAX_MINUTES;
+    elements.minutesFeedback.textContent = `Ich rechne mit maximal ${MAX_MINUTES} Minuten.`;
     ui.updateTimeButtons();
     ui.updateFlowSignal();
     markMinutesSelected(state.minutes);
@@ -156,12 +143,7 @@ function handleGardenTypes(event) {
 
   state.selectedTypes = new Set(checked.map(input => input.value));
   ui.updateSettingsSummary();
-  ui.setAgentStatus({
-    step: hasValidMinutes() ? 'Kontext aktualisiert' : 'Zeit wählen',
-    last: 'Gartentyp aktualisiert',
-    next: hasValidMinutes() ? 'Vorschlag aktualisieren' : 'Zeitfenster antippen',
-    status: 'Gartentyp aktualisiert.'
-  });
+  markContextUpdated('Gartentyp aktualisiert', 'Gartentyp aktualisiert.');
 }
 
 function handlePresetCity() {
@@ -171,14 +153,7 @@ function handlePresetCity() {
     return;
   }
 
-  state.location = CITY_PRESETS[value];
-  ui.updateSettingsSummary();
-  ui.setAgentStatus({
-    step: hasValidMinutes() ? 'Kontext aktualisiert' : 'Zeit wählen',
-    last: `${state.location.label} ausgewählt`,
-    next: hasValidMinutes() ? 'Vorschlag aktualisieren' : 'Zeitfenster antippen',
-    status: `${state.location.label} ist ausgewählt.`
-  });
+  selectLocation(CITY_PRESETS[value]);
 }
 
 async function searchCity() {
@@ -198,15 +173,7 @@ async function searchCity() {
         return false;
       }
 
-      state.location = location;
-      elements.citySelect.value = 'custom';
-      ui.updateSettingsSummary();
-      ui.setAgentStatus({
-        step: hasValidMinutes() ? 'Kontext aktualisiert' : 'Zeit wählen',
-        last: `${state.location.label} ausgewählt`,
-        next: hasValidMinutes() ? 'Vorschlag aktualisieren' : 'Zeitfenster antippen',
-        status: `${state.location.label} ist ausgewählt.`
-      });
+      selectLocation(location, { selectValue: 'custom' });
       return true;
     });
   } catch (error) {
@@ -234,17 +201,13 @@ async function useGeolocation() {
         maximumAge: 0
       });
 
-      state.location = {
+      selectLocation({
         label: 'Aktueller Standort',
         latitude: position.coords.latitude,
         longitude: position.coords.longitude
-      };
-      elements.citySelect.value = 'custom';
-      ui.updateSettingsSummary();
-      ui.setAgentStatus({
-        step: hasValidMinutes() ? 'Kontext aktualisiert' : 'Zeit wählen',
+      }, {
+        selectValue: 'custom',
         last: 'Standort übernommen',
-        next: hasValidMinutes() ? 'Vorschlag aktualisieren' : 'Zeitfenster antippen',
         status: 'Standort übernommen. Die Koordinaten bleiben nur in dieser Sitzung.'
       });
       return true;
@@ -356,7 +319,30 @@ function resetRecommendations() {
 }
 
 function hasValidMinutes() {
-  return Number.isFinite(state.minutes) && state.minutes >= 5;
+  return Number.isFinite(state.minutes) && state.minutes >= MIN_MINUTES;
+}
+
+function selectLocation(location, { selectValue, last, status } = {}) {
+  state.location = location;
+  if (selectValue) {
+    elements.citySelect.value = selectValue;
+  }
+
+  ui.updateSettingsSummary();
+  markContextUpdated(
+    last || `${location.label} ausgewählt`,
+    status || `${location.label} ist ausgewählt.`
+  );
+}
+
+function markContextUpdated(last, status) {
+  const hasMinutes = hasValidMinutes();
+  ui.setAgentStatus({
+    step: hasMinutes ? 'Kontext aktualisiert' : 'Zeit wählen',
+    last,
+    next: hasMinutes ? 'Vorschlag aktualisieren' : 'Zeitfenster antippen',
+    status
+  });
 }
 
 function markMinutesSelected(minutes) {
