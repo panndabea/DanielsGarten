@@ -416,6 +416,7 @@ button:disabled {
   width: clamp(112px, 14vw, 148px);
   aspect-ratio: 1;
   transform-origin: 50% 92%;
+  filter: none;
   transition: transform .2s ease;
 }
 
