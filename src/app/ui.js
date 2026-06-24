@@ -1,14 +1,35 @@
 export function createUi(elements, state, gardenLabels) {
+  const mascotCopy = {
+    idle: 'Wie viel Gartenzeit hast du heute?',
+    thinking: 'Ich schaue kurz aufs Wetter.',
+    happy: 'Das lohnt sich heute wirklich.',
+    resting: 'Heute darf dein Garten einfach atmen.',
+    done: 'Schön gemacht.',
+    weather: 'Ich nutze heute Saisonwissen.'
+  };
+  let resultMascot = { state: 'idle', message: mascotCopy.idle };
+
+  elements.taskList.addEventListener('taskdone', event => {
+    if (event.detail?.isDone) {
+      setMascot('done', mascotCopy.done);
+      return;
+    }
+
+    setMascot(resultMascot.state, resultMascot.message);
+  });
+
   function renderIntroState() {
+    resultMascot = { state: 'idle', message: mascotCopy.idle };
+    setMascot(resultMascot.state, resultMascot.message);
     updateFlowSignal();
     updateSettingsSummary();
-    elements.contextLabel.textContent = `${state.location.label} · ${state.minutes} Minuten`;
+    elements.contextLabel.textContent = contextLabelText(state.location, state.minutes);
     elements.resultTitle.textContent = 'Bereit für deine Aufgabe';
-    elements.resultSummary.textContent = 'Wähle dein Zeitfenster und starte mit einem Klick.';
+    elements.resultSummary.textContent = 'Wähle dein Zeitfenster, dann erscheinen die Aufgaben sofort.';
     elements.regenerateButton.hidden = true;
     elements.weatherDetails.hidden = true;
     elements.emptyKicker.textContent = 'Startbereit';
-    elements.emptyTitle.textContent = 'Wähle dein Zeitfenster und starte.';
+    elements.emptyTitle.textContent = 'Wähle zuerst ein Zeitfenster.';
     elements.emptyText.textContent = `${state.location.label} ist vorausgewählt; Standortfreigabe ist optional.`;
     elements.taskList.replaceChildren();
     elements.emptyState.classList.add('is-visible');
@@ -37,9 +58,12 @@ export function createUi(elements, state, gardenLabels) {
     const typeText = context.selectedTypes.map(type => gardenLabels[type]).join(', ');
     const sourceText = context.weather.source === 'Open-Meteo' ? 'Wetter' : 'Saison';
     const fallbackText = context.weather.source === 'Open-Meteo' ? '' : ' mit saisonalem Fallback';
-    elements.contextLabel.textContent = `${context.location.label} · ${context.minutes} Minuten · ${sourceText}`;
+    resultMascot = taskMascotState(tasks, context, mascotCopy);
+    setMascot(resultMascot.state, resultMascot.message);
+
+    elements.contextLabel.textContent = `${contextLabelText(context.location, context.minutes)} · ${sourceText}`;
     elements.resultTitle.textContent = tasks.length
-      ? `${context.minutes} Minuten in ${context.location.label}`
+      ? `${minutesLabel(context.minutes)} in ${context.location.label}`
       : 'Heute nichts Dringendes';
     elements.resultSummary.textContent = tasks.length
       ? `Zuerst: ${tasks[0].task.title}. ${tasks[0].reason}`
@@ -68,6 +92,9 @@ export function createUi(elements, state, gardenLabels) {
     elements.regenerateButton.disabled = isBusy;
     elements.useGps.disabled = isBusy;
     elements.searchCity.disabled = isBusy;
+    if (isBusy) {
+      setMascot('thinking', busyMascotMessage(message, mascotCopy));
+    }
     if (message) setStatus(message);
   }
 
@@ -75,10 +102,19 @@ export function createUi(elements, state, gardenLabels) {
     elements.statusLine.textContent = message;
   }
 
+  function setMascot(stateName, message) {
+    if (!elements.mascot || !elements.mascotBubble) return;
+
+    elements.mascot.dataset.mascotState = stateName;
+    if (message) {
+      elements.mascotBubble.textContent = message;
+    }
+  }
+
   function updateFlowSignal() {
-    elements.flowSignal.textContent = `${state.minutes} min`;
+    elements.flowSignal.textContent = shortMinutesLabel(state.minutes);
     if (!state.hasGenerated) {
-      elements.contextLabel.textContent = `${state.location.label} · ${state.minutes} Minuten`;
+      elements.contextLabel.textContent = contextLabelText(state.location, state.minutes);
     }
   }
 
@@ -114,6 +150,7 @@ export function createUi(elements, state, gardenLabels) {
     renderTasks,
     setBusy,
     setStatus,
+    setMascot,
     updateFlowSignal,
     updateTimeButtons,
     updateSettingsSummary,
@@ -185,11 +222,38 @@ function createTaskCard(item, index = 0) {
     doneButton.setAttribute('aria-pressed', String(isDone));
     doneLabel.textContent = isDone ? 'Erledigt' : 'Erledigt markieren';
     more.open = !isDone && more.open;
+    article.dispatchEvent(new CustomEvent('taskdone', {
+      bubbles: true,
+      detail: { isDone, taskId: item.task.id }
+    }));
   });
 
   action.append(doneButton);
   article.append(content, action);
   return article;
+}
+
+function taskMascotState(tasks, context, copy) {
+  if (!tasks.length) {
+    return {
+      state: 'resting',
+      message: context.weather.source === 'Open-Meteo'
+        ? copy.resting
+        : 'Saisonwissen sagt: heute darf dein Garten atmen.'
+    };
+  }
+
+  if (context.weather.source !== 'Open-Meteo') {
+    return { state: 'weather', message: copy.weather };
+  }
+
+  return { state: 'happy', message: copy.happy };
+}
+
+function busyMascotMessage(message, copy) {
+  if (message?.includes('Stadt')) return 'Ich suche deine Stadt.';
+  if (message?.includes('Standort')) return 'Ich warte kurz auf den Standort.';
+  return copy.thinking;
 }
 
 function pill(text, className) {
@@ -219,4 +283,16 @@ function weatherSummaryText(weather) {
   const sourceText = weather.source === 'Open-Meteo' ? 'Wetter' : 'Saison-Fallback';
 
   return `${sourceText}: ${Math.round(weather.temperature)} °C, ${rainText}${windText}. Details anzeigen`;
+}
+
+function contextLabelText(location, minutes) {
+  return `${location.label} · ${minutesLabel(minutes)}`;
+}
+
+function minutesLabel(minutes) {
+  return Number.isFinite(minutes) ? `${minutes} Minuten` : 'Zeit wählen';
+}
+
+function shortMinutesLabel(minutes) {
+  return Number.isFinite(minutes) ? `${minutes} min` : 'Zeit wählen';
 }

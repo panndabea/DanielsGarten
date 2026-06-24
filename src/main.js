@@ -24,8 +24,10 @@ const GARDEN_LABELS = {
   lawn: 'Rasenfläche'
 };
 
+const CUSTOM_MINUTES_DEBOUNCE_MS = 350;
+
 const state = {
-  minutes: 20,
+  minutes: null,
   selectedTypes: new Set(['garden']),
   location: CITY_PRESETS.berlin,
   weather: null,
@@ -35,6 +37,8 @@ const state = {
 
 const elements = getElements();
 const ui = createUi(elements, state, GARDEN_LABELS);
+let recommendationTimer = null;
+let pendingRecommendation = false;
 
 function init() {
   elements.todayLabel.textContent = new Intl.DateTimeFormat('de-DE', {
@@ -52,9 +56,11 @@ function init() {
   elements.searchCity.addEventListener('click', searchCity);
   elements.plannerForm.addEventListener('submit', event => {
     event.preventDefault();
-    generateRecommendations();
+    void generateRecommendations();
   });
-  elements.regenerateButton.addEventListener('click', generateRecommendations);
+  elements.regenerateButton.addEventListener('click', () => {
+    void generateRecommendations();
+  });
 
   setupNetworkStatus({ setStatus: ui.setStatus });
   setupInstallPrompt({ elements, setStatus: ui.setStatus });
@@ -66,11 +72,14 @@ function init() {
 }
 
 function selectMinutes(minutes) {
+  if (!Number.isFinite(minutes)) return;
+
   state.minutes = minutes;
   elements.customMinutes.value = '';
   elements.minutesFeedback.textContent = '';
   ui.updateTimeButtons();
   ui.updateFlowSignal();
+  queueRecommendations();
 }
 
 function handleCustomMinutes() {
@@ -78,17 +87,20 @@ function handleCustomMinutes() {
   const minutes = Number(rawValue);
 
   if (!rawValue) {
+    state.minutes = null;
+    clearRecommendationTimer();
+    resetRecommendations();
     elements.minutesFeedback.textContent = '';
     ui.updateTimeButtons();
     return;
   }
 
   if (!Number.isFinite(minutes) || minutes < 5) {
+    state.minutes = null;
+    clearRecommendationTimer();
+    resetRecommendations();
     elements.minutesFeedback.textContent = 'Mindestens 5 Minuten.';
-    elements.timeButtons.forEach(button => {
-      button.classList.remove('is-active');
-      button.setAttribute('aria-pressed', 'false');
-    });
+    ui.updateTimeButtons();
     return;
   }
 
@@ -98,6 +110,7 @@ function handleCustomMinutes() {
     : '';
   ui.updateTimeButtons();
   ui.updateFlowSignal();
+  queueRecommendations(CUSTOM_MINUTES_DEBOUNCE_MS);
 }
 
 function normalizeCustomMinutes() {
@@ -111,16 +124,17 @@ function normalizeCustomMinutes() {
     elements.customMinutes.value = '5';
     state.minutes = 5;
     elements.minutesFeedback.textContent = 'Ich rechne mit 5 Minuten.';
-  }
-
-  if (minutes > 180) {
+    ui.updateTimeButtons();
+    ui.updateFlowSignal();
+    queueRecommendations();
+  } else if (minutes > 180) {
     elements.customMinutes.value = '180';
     state.minutes = 180;
     elements.minutesFeedback.textContent = 'Ich rechne mit maximal 180 Minuten.';
+    ui.updateTimeButtons();
+    ui.updateFlowSignal();
+    queueRecommendations();
   }
-
-  ui.updateTimeButtons();
-  ui.updateFlowSignal();
 }
 
 function handleGardenTypes(event) {
@@ -160,6 +174,7 @@ async function searchCity() {
       const location = await findCity(query);
       if (!location) {
         ui.setStatus('Diese Stadt habe ich nicht gefunden.');
+        ui.setMascot('idle', 'Diese Stadt finde ich gerade nicht.');
         return false;
       }
 
@@ -171,9 +186,10 @@ async function searchCity() {
     });
   } catch (error) {
     ui.setStatus('Die Stadtsuche ist gerade nicht erreichbar.');
+    ui.setMascot('idle', 'Kein Problem, eine Stadt aus der Liste reicht.');
   }
 
-  if (didSelectCity) {
+  if (didSelectCity && hasValidMinutes()) {
     await generateRecommendations();
   }
 }
@@ -205,14 +221,29 @@ async function useGeolocation() {
     });
   } catch (error) {
     ui.setStatus('Standort nicht freigegeben. Du kannst stattdessen eine Stadt nutzen.');
+    ui.setMascot('idle', 'Kein Problem, eine Stadt reicht.');
   }
 
-  if (didSelectLocation) {
+  if (didSelectLocation && hasValidMinutes()) {
     await generateRecommendations();
   }
 }
 
 async function generateRecommendations() {
+  clearRecommendationTimer();
+
+  if (!hasValidMinutes()) {
+    pendingRecommendation = false;
+    ui.setStatus('Wähle zuerst ein Zeitfenster.');
+    ui.setMascot('idle', 'Wie viel Gartenzeit hast du heute?');
+    return false;
+  }
+
+  if (state.busy) {
+    pendingRecommendation = true;
+    return false;
+  }
+
   const didGenerate = await withBusy('Lade Wetter und berechne Aufgaben...', async () => {
     try {
       state.weather = await fetchWeather(state.location);
@@ -220,6 +251,11 @@ async function generateRecommendations() {
     } catch (error) {
       state.weather = fallbackWeather();
       ui.setStatus('Wetterdienst nicht erreichbar. Ich nutze einen saisonalen Fallback.');
+    }
+
+    if (!hasValidMinutes()) {
+      resetRecommendations();
+      return false;
     }
 
     const context = buildContext(state);
@@ -232,6 +268,13 @@ async function generateRecommendations() {
   if (didGenerate) {
     ui.revealResults();
   }
+
+  if (pendingRecommendation) {
+    pendingRecommendation = false;
+    return generateRecommendations();
+  }
+
+  return didGenerate;
 }
 
 async function withBusy(message, action) {
@@ -250,6 +293,35 @@ function getCurrentPosition(options) {
   return new Promise((resolve, reject) => {
     navigator.geolocation.getCurrentPosition(resolve, reject, options);
   });
+}
+
+function queueRecommendations(delay = 0) {
+  clearRecommendationTimer();
+  if (!hasValidMinutes()) return;
+
+  recommendationTimer = setTimeout(() => {
+    recommendationTimer = null;
+    void generateRecommendations();
+  }, delay);
+}
+
+function clearRecommendationTimer() {
+  if (recommendationTimer === null) return;
+
+  clearTimeout(recommendationTimer);
+  recommendationTimer = null;
+}
+
+function resetRecommendations() {
+  pendingRecommendation = false;
+  state.weather = null;
+  state.hasGenerated = false;
+  ui.renderWeather(null);
+  ui.renderIntroState();
+}
+
+function hasValidMinutes() {
+  return Number.isFinite(state.minutes) && state.minutes >= 5;
 }
 
 init();

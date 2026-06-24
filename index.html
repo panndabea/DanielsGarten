@@ -18,7 +18,7 @@
   <link rel="preload" as="image" href="assets/gartenzeit-hero.png" />
   <link rel="stylesheet" href="src/styles/main.css" />
 </head>
-<body data-design="swiss">
+<body data-design="french">
   <header class="app-header">
     <a class="brand" href="#planner" aria-label="Gartenzeit Start">
       <span class="brand-mark" aria-hidden="true">GZ</span>
@@ -45,25 +45,33 @@
 
       <div class="hero-content">
         <div class="hero-copy">
-          <p class="kicker">Gartenzeit</p>
-          <h1 id="appTitle">Wie viel Zeit hast du?</h1>
-          <p class="tagline">Wähle ein Zeitfenster. Wir zeigen dir sofort die sinnvollste Aufgabe für heute.</p>
+          <div class="mascot-stage" aria-label="Gartenzeit Begleiter">
+            <div class="mascot" id="mascot" data-mascot-state="idle" aria-hidden="true">
+              <span class="mascot-pot"></span>
+              <span class="mascot-face">
+                <span class="mascot-eye"></span>
+                <span class="mascot-eye"></span>
+                <span class="mascot-mouth"></span>
+              </span>
+              <span class="mascot-stem"></span>
+              <span class="mascot-leaf mascot-leaf-left"></span>
+              <span class="mascot-leaf mascot-leaf-right"></span>
+              <span class="mascot-sprout"></span>
+            </div>
+            <p class="mascot-bubble" id="mascotBubble">Wie viel Gartenzeit hast du heute?</p>
+          </div>
+          <h1 class="visually-hidden" id="appTitle">Gartenzeit</h1>
+          <p class="tagline">Such dir ein Zeitfenster aus. Wir zeigen dir eine kleine, sinnvolle Gartenaufgabe für heute.</p>
         </div>
 
         <form class="planner-panel" id="plannerForm">
-          <div class="panel-head">
-            <div>
-              <p class="panel-label">Jetzt starten</p>
-              <h2>Dein Zeitfenster</h2>
-            </div>
-            <span class="panel-chip" id="flowSignal">20 min</span>
-          </div>
+          <span class="visually-hidden" id="flowSignal">Zeit wählen</span>
 
-          <fieldset class="field-group">
-            <legend>Zeitbudget wählen</legend>
+          <fieldset class="field-group time-field">
+            <legend class="visually-hidden">Zeitfenster wählen</legend>
             <div class="segmented" role="group" aria-label="Zeitbudget wählen">
               <button class="time-option" type="button" data-minutes="10" aria-pressed="false">10 min</button>
-              <button class="time-option is-active" type="button" data-minutes="20" aria-pressed="true">20 min</button>
+              <button class="time-option" type="button" data-minutes="20" aria-pressed="false">20 min</button>
               <button class="time-option" type="button" data-minutes="30" aria-pressed="false">30 min</button>
               <button class="time-option" type="button" data-minutes="60" aria-pressed="false">60 min</button>
             </div>
@@ -180,13 +188,13 @@
         </div>
       </div>
 
-      <p class="result-summary" id="resultSummary">Wähle dein Zeitfenster und starte mit einem Klick.</p>
+      <p class="result-summary" id="resultSummary">Wähle dein Zeitfenster, dann erscheinen die Aufgaben sofort.</p>
 
       <div class="task-list" id="taskList" aria-live="polite"></div>
 
       <div class="empty-state" id="emptyState">
         <p class="kicker" id="emptyKicker">Startbereit</p>
-        <h3 id="emptyTitle">Wähle dein Zeitfenster und starte.</h3>
+        <h3 id="emptyTitle">Wähle zuerst ein Zeitfenster.</h3>
         <p id="emptyText">Berlin ist vorausgewählt; Standortfreigabe ist optional.</p>
       </div>
 

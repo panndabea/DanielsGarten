@@ -1,6 +1,8 @@
 export function getElements() {
   return {
     todayLabel: document.getElementById('todayLabel'),
+    mascot: document.getElementById('mascot'),
+    mascotBubble: document.getElementById('mascotBubble'),
     flowSignal: document.getElementById('flowSignal'),
     gardenSummary: document.getElementById('gardenSummary'),
     locationSummary: document.getElementById('locationSummary'),
