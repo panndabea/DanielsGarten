@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { actionButtonCopy, mascotWeatherMood, weatherMascotMessage } from '../src/app/ui.js';
+import { actionButtonCopy, mascotVisualFor, mascotVisualNameFor, mascotWeatherMood, weatherMascotMessage } from '../src/app/ui.js';
 
 const calmWeather = {
   source: 'Open-Meteo',
@@ -62,6 +62,31 @@ test('weatherMascotMessage uses the mood-specific copy', () => {
 
   assert.equal(weatherMascotMessage({ ...calmWeather, isDry: true }, copy), 'Trocken');
   assert.equal(weatherMascotMessage(null, copy), 'Start');
+});
+
+test('mascotVisualNameFor maps character states and weather moods to 3d loops', () => {
+  assert.equal(mascotVisualNameFor('idle', 'mild'), 'idle');
+  assert.equal(mascotVisualNameFor('thinking', 'mild'), 'wave');
+  assert.equal(mascotVisualNameFor('weather', 'fallback'), 'wave');
+  assert.equal(mascotVisualNameFor('happy', 'rainSoon'), 'wave');
+  assert.equal(mascotVisualNameFor('happy', 'dry'), 'watering');
+  assert.equal(mascotVisualNameFor('happy', 'hot'), 'watering');
+  assert.equal(mascotVisualNameFor('happy', 'rain'), 'watering');
+  assert.equal(mascotVisualNameFor('happy', 'wet'), 'watering');
+  assert.equal(mascotVisualNameFor('happy', 'wind'), 'wilted');
+  assert.equal(mascotVisualNameFor('resting', 'mild'), 'wilted');
+  assert.equal(mascotVisualNameFor('done', 'dry'), 'bounce');
+});
+
+test('mascotVisualFor switches animated 3d loops to static reduced-motion images', () => {
+  assert.equal(
+    mascotVisualFor('happy', 'dry', false),
+    'assets/character/plant-pot-mascot-watering-loop.webp'
+  );
+  assert.equal(
+    mascotVisualFor('happy', 'dry', true),
+    'assets/character/plant-pot-mascot-watering.png'
+  );
 });
 
 test('actionButtonCopy matches the automatic recommendation flow', () => {

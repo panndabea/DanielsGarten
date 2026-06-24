@@ -1,5 +1,5 @@
 const CACHE_PREFIX = 'gartenzeit-';
-const APP_CACHE = `${CACHE_PREFIX}app-v10`;
+const APP_CACHE = `${CACHE_PREFIX}app-v11`;
 
 const APP_SHELL = [
   './',
@@ -14,6 +14,16 @@ const APP_SHELL = [
   './src/data/tasks.js',
   './manifest.webmanifest',
   './assets/gartenzeit-hero.png',
+  './assets/character/plant-pot-mascot-idle-breathe.webp',
+  './assets/character/plant-pot-mascot-idle.png',
+  './assets/character/plant-pot-mascot-wave-loop.webp',
+  './assets/character/plant-pot-mascot-wave.png',
+  './assets/character/plant-pot-mascot-watering-loop.webp',
+  './assets/character/plant-pot-mascot-watering.png',
+  './assets/character/plant-pot-mascot-bounce-loop.webp',
+  './assets/character/plant-pot-mascot-bounce.png',
+  './assets/character/plant-pot-mascot-wilted-sway.webp',
+  './assets/character/plant-pot-mascot-wilted.png',
   './assets/icons/icon-192.png',
   './assets/icons/icon-512.png',
   './assets/icons/icon-maskable-512.png',

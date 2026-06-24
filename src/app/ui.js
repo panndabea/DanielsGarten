@@ -1,3 +1,26 @@
+const mascotVisualAssets = {
+  idle: {
+    animated: 'assets/character/plant-pot-mascot-idle-breathe.webp',
+    static: 'assets/character/plant-pot-mascot-idle.png'
+  },
+  wave: {
+    animated: 'assets/character/plant-pot-mascot-wave-loop.webp',
+    static: 'assets/character/plant-pot-mascot-wave.png'
+  },
+  watering: {
+    animated: 'assets/character/plant-pot-mascot-watering-loop.webp',
+    static: 'assets/character/plant-pot-mascot-watering.png'
+  },
+  bounce: {
+    animated: 'assets/character/plant-pot-mascot-bounce-loop.webp',
+    static: 'assets/character/plant-pot-mascot-bounce.png'
+  },
+  wilted: {
+    animated: 'assets/character/plant-pot-mascot-wilted-sway.webp',
+    static: 'assets/character/plant-pot-mascot-wilted.png'
+  }
+};
+
 export function createUi(elements, state, gardenLabels) {
   const mascotCopy = {
     idle: 'Wie viel Gartenzeit hast du heute?',
@@ -17,6 +40,17 @@ export function createUi(elements, state, gardenLabels) {
     mild: 'Ruhiges Wetter: ich wachse ganz entspannt.'
   };
   let resultMascot = { state: 'idle', message: mascotCopy.idle };
+  let currentMascotState = 'idle';
+  let currentWeatherMood = 'idle';
+  const reducedMotionQuery = typeof window !== 'undefined' && window.matchMedia
+    ? window.matchMedia('(prefers-reduced-motion: reduce)')
+    : null;
+
+  if (reducedMotionQuery?.addEventListener) {
+    reducedMotionQuery.addEventListener('change', updateMascotVisual);
+  } else if (reducedMotionQuery?.addListener) {
+    reducedMotionQuery.addListener(updateMascotVisual);
+  }
 
   elements.taskList.addEventListener('taskdone', event => {
     if (event.detail?.isDone) {
@@ -33,6 +67,7 @@ export function createUi(elements, state, gardenLabels) {
     setMascot(resultMascot.state, resultMascot.message);
     updateFlowSignal();
     updateSettingsSummary();
+    elements.resultsPanel.hidden = true;
     elements.contextLabel.textContent = contextLabelText(state.location, state.minutes);
     elements.resultsPanel.classList.add('is-intro');
     elements.resultTitle.textContent = 'Nächster Schritt';
@@ -81,6 +116,7 @@ export function createUi(elements, state, gardenLabels) {
     resultMascot = taskMascotState(tasks, context, mascotCopy);
     setMascot(resultMascot.state, resultMascot.message);
 
+    elements.resultsPanel.hidden = false;
     elements.resultsPanel.classList.remove('is-intro');
     elements.contextLabel.textContent = `${contextLabelText(context.location, context.minutes)} · ${sourceText}`;
     elements.resultTitle.textContent = tasks.length
@@ -153,7 +189,9 @@ export function createUi(elements, state, gardenLabels) {
   function setMascot(stateName, message) {
     if (!elements.mascot || !elements.mascotBubble) return;
 
+    currentMascotState = stateName;
     elements.mascot.dataset.mascotState = stateName;
+    updateMascotVisual();
     if (message) {
       elements.mascotBubble.textContent = message;
     }
@@ -162,7 +200,20 @@ export function createUi(elements, state, gardenLabels) {
   function setMascotWeather(weather) {
     if (!elements.mascot) return;
 
-    elements.mascot.dataset.weatherMood = mascotWeatherMood(weather);
+    currentWeatherMood = mascotWeatherMood(weather);
+    elements.mascot.dataset.weatherMood = currentWeatherMood;
+    updateMascotVisual();
+  }
+
+  function updateMascotVisual() {
+    if (!elements.mascot || !elements.mascotImage) return;
+
+    const visualName = mascotVisualNameFor(currentMascotState, currentWeatherMood);
+    const source = mascotVisualFor(currentMascotState, currentWeatherMood, reducedMotionQuery?.matches);
+    elements.mascot.dataset.mascotVisual = visualName;
+    if (elements.mascotImage.getAttribute('src') !== source) {
+      elements.mascotImage.setAttribute('src', source);
+    }
   }
 
   function updateFlowSignal() {
@@ -381,6 +432,23 @@ export function mascotWeatherMood(weather) {
 export function weatherMascotMessage(weather, copy) {
   const mood = mascotWeatherMood(weather);
   return copy[mood] || copy.happy;
+}
+
+export function mascotVisualNameFor(stateName = 'idle', weatherMood = 'idle') {
+  if (stateName === 'thinking' || stateName === 'weather') return 'wave';
+  if (stateName === 'done') return 'bounce';
+  if (stateName === 'resting') return 'wilted';
+  if (weatherMood === 'frost' || weatherMood === 'wind') return 'wilted';
+  if (['dry', 'hot', 'rain', 'wet'].includes(weatherMood)) return 'watering';
+  if (weatherMood === 'rainSoon' || weatherMood === 'fallback') return 'wave';
+  if (stateName === 'happy') return 'bounce';
+  return 'idle';
+}
+
+export function mascotVisualFor(stateName = 'idle', weatherMood = 'idle', isReducedMotion = false) {
+  const visualName = mascotVisualNameFor(stateName, weatherMood);
+  const asset = mascotVisualAssets[visualName] || mascotVisualAssets.idle;
+  return isReducedMotion ? asset.static : asset.animated;
 }
 
 function contextLabelText(location, minutes) {

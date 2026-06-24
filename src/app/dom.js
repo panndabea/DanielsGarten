@@ -2,6 +2,7 @@ export function getElements() {
   return {
     todayLabel: document.getElementById('todayLabel'),
     mascot: document.getElementById('mascot'),
+    mascotImage: document.getElementById('mascotImage'),
     mascotBubble: document.getElementById('mascotBubble'),
     flowSignal: document.getElementById('flowSignal'),
     gardenSummary: document.getElementById('gardenSummary'),

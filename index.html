@@ -59,24 +59,16 @@
           <span class="visually-hidden" id="flowSignal">Zeit wählen</span>
 
           <div class="mascot-stage" aria-label="Gartenzeit Begleiter">
-            <div class="mascot" id="mascot" data-mascot-state="idle" aria-hidden="true">
-              <span class="mascot-pot"></span>
-              <span class="mascot-face">
-                <span class="mascot-eye"></span>
-                <span class="mascot-eye"></span>
-                <span class="mascot-mouth"></span>
-              </span>
-              <span class="mascot-stem"></span>
-              <span class="mascot-leaf mascot-leaf-left"></span>
-              <span class="mascot-leaf mascot-leaf-right"></span>
-              <span class="mascot-sprout"></span>
-              <span class="mascot-weather mascot-weather-sun"></span>
-              <span class="mascot-weather mascot-weather-drop mascot-weather-drop-one"></span>
-              <span class="mascot-weather mascot-weather-drop mascot-weather-drop-two"></span>
-              <span class="mascot-weather mascot-weather-gust mascot-weather-gust-one"></span>
-              <span class="mascot-weather mascot-weather-gust mascot-weather-gust-two"></span>
-              <span class="mascot-weather mascot-weather-frost"></span>
-              <span class="mascot-weather mascot-weather-puddle"></span>
+            <div class="mascot" id="mascot" data-mascot-state="idle" data-mascot-visual="idle" aria-hidden="true">
+              <img
+                class="mascot-image"
+                id="mascotImage"
+                src="assets/character/plant-pot-mascot-idle-breathe.webp"
+                width="640"
+                height="640"
+                alt=""
+                decoding="async"
+              />
             </div>
             <div class="mascot-dialog">
               <p class="mascot-bubble" id="mascotBubble">Wie viel Gartenzeit hast du heute?</p>
@@ -96,13 +88,13 @@
 
         <div class="planner-panel">
           <details class="settings-disclosure" id="settingsDetails">
-            <summary>
+            <summary aria-label="Gartentyp und Standort anpassen">
               <span class="settings-summary">
-                <strong id="gardenSummary">Garten</strong>
-                <span aria-hidden="true">·</span>
-                <strong id="locationSummary">Berlin</strong>
+                <span>Ich bin im</span>
+                <strong class="settings-summary-term" id="gardenSummary">Garten</strong>
+                <span>in</span>
+                <strong class="settings-summary-term" id="locationSummary">Berlin</strong>
               </span>
-              <span>Anpassen</span>
             </summary>
 
             <div class="settings-panel">
@@ -214,7 +206,7 @@
       </form>
     </section>
 
-    <section class="results-panel is-intro" id="resultsPanel" aria-labelledby="resultTitle">
+    <section class="results-panel is-intro" id="resultsPanel" aria-labelledby="resultTitle" hidden>
       <div class="result-heading">
         <div>
           <p class="kicker" id="contextLabel">Bereit</p>
