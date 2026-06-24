@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gartenzeit</title>
+  <meta name="description" content="Sag uns, wie viel Zeit du hast. Gartenzeit sagt dir, was sich heute im Garten lohnt." />
+  <link rel="preload" as="image" href="assets/gartenzeit-hero.png" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body data-design="swiss">
+  <header class="app-header">
+    <a class="brand" href="#planner" aria-label="Gartenzeit Start">
+      <span class="brand-mark" aria-hidden="true">GZ</span>
+      <span>Gartenzeit</span>
+    </a>
+    <div class="header-actions">
+      <span class="date-pill" id="todayLabel">Heute</span>
+    </div>
+  </header>
+
+  <main class="app-shell" id="planner">
+    <section class="hero-panel" aria-labelledby="appTitle">
+      <img class="hero-image" src="assets/gartenzeit-hero.png" width="1672" height="941" fetchpriority="high" alt="" aria-hidden="true" />
+      <div class="hero-scrim" aria-hidden="true"></div>
+
+      <div class="hero-content">
+        <div class="hero-copy">
+          <p class="kicker">Gartenzeit</p>
+          <h1 id="appTitle">Wie viel Zeit hast du?</h1>
+          <p class="tagline">Wähle ein Zeitfenster. Wir zeigen dir sofort die sinnvollste Aufgabe für heute.</p>
+        </div>
+
+        <form class="planner-panel" id="plannerForm">
+          <div class="panel-head">
+            <div>
+              <p class="panel-label">Jetzt starten</p>
+              <h2>Dein Zeitfenster</h2>
+            </div>
+            <span class="panel-chip" id="flowSignal">20 min</span>
+          </div>
+
+          <fieldset class="field-group">
+            <legend>Zeitbudget wählen</legend>
+            <div class="segmented" role="group" aria-label="Zeitbudget wählen">
+              <button class="time-option" type="button" data-minutes="10" aria-pressed="false">10 min</button>
+              <button class="time-option is-active" type="button" data-minutes="20" aria-pressed="true">20 min</button>
+              <button class="time-option" type="button" data-minutes="30" aria-pressed="false">30 min</button>
+              <button class="time-option" type="button" data-minutes="60" aria-pressed="false">60 min</button>
+            </div>
+            <details class="optional-disclosure">
+              <summary>Andere Zeit eingeben</summary>
+              <label class="input-label compact-input" for="customMinutes">
+                Freie Eingabe
+                <input id="customMinutes" name="customMinutes" type="number" min="5" max="180" step="5" inputmode="numeric" placeholder="Minuten" />
+              </label>
+              <p class="field-feedback" id="minutesFeedback" aria-live="polite"></p>
+            </details>
+          </fieldset>
+
+          <details class="settings-disclosure" id="settingsDetails">
+            <summary>
+              <span class="settings-summary">
+                <strong id="gardenSummary">Garten</strong>
+                <span aria-hidden="true">·</span>
+                <strong id="locationSummary">Berlin</strong>
+              </span>
+              <span>Anpassen</span>
+            </summary>
+
+            <div class="settings-panel">
+              <fieldset class="field-group">
+                <legend>Gartentyp</legend>
+                <div class="type-grid" id="gardenTypes">
+                  <label class="type-chip">
+                    <input type="checkbox" name="gardenType" value="balcony" />
+                    <span class="type-dot balcony-dot" aria-hidden="true"></span>
+                    <span>Balkon</span>
+                  </label>
+                  <label class="type-chip">
+                    <input type="checkbox" name="gardenType" value="small" />
+                    <span class="type-dot small-dot" aria-hidden="true"></span>
+                    <span>Kleiner Garten</span>
+                  </label>
+                  <label class="type-chip">
+                    <input type="checkbox" name="gardenType" value="garden" checked />
+                    <span class="type-dot garden-dot" aria-hidden="true"></span>
+                    <span>Garten</span>
+                  </label>
+                  <label class="type-chip">
+                    <input type="checkbox" name="gardenType" value="vegetable" />
+                    <span class="type-dot vegetable-dot" aria-hidden="true"></span>
+                    <span>Gemüse</span>
+                  </label>
+                  <label class="type-chip">
+                    <input type="checkbox" name="gardenType" value="frontyard" />
+                    <span class="type-dot frontyard-dot" aria-hidden="true"></span>
+                    <span>Vorgarten</span>
+                  </label>
+                  <label class="type-chip">
+                    <input type="checkbox" name="gardenType" value="lawn" />
+                    <span class="type-dot lawn-dot" aria-hidden="true"></span>
+                    <span>Rasen</span>
+                  </label>
+                </div>
+              </fieldset>
+
+              <fieldset class="field-group">
+                <legend>Standort</legend>
+                <div class="location-grid">
+                  <button class="secondary-action" id="useGps" type="button">
+                    <span aria-hidden="true">⌖</span>
+                    Standort
+                  </button>
+                  <label class="input-label" for="citySelect">
+                    Stadt
+                    <select id="citySelect" name="citySelect">
+                      <option value="berlin">Berlin</option>
+                      <option value="hamburg">Hamburg</option>
+                      <option value="muenchen">München</option>
+                      <option value="koeln">Köln</option>
+                      <option value="frankfurt">Frankfurt am Main</option>
+                      <option value="stuttgart">Stuttgart</option>
+                      <option value="leipzig">Leipzig</option>
+                      <option value="freiburg">Freiburg</option>
+                      <option value="custom" hidden>Eigene Stadt</option>
+                    </select>
+                  </label>
+                </div>
+                <p class="privacy-note">Standort wird nur für diese Berechnung genutzt und nicht gespeichert.</p>
+                <details class="optional-disclosure">
+                  <summary>Andere Stadt suchen</summary>
+                  <div class="city-search">
+                    <label class="input-label" for="cityInput">
+                      Eigene Stadt
+                      <input id="cityInput" name="cityInput" type="search" autocomplete="off" placeholder="z. B. Potsdam" />
+                    </label>
+                    <button class="secondary-action" id="searchCity" type="button">Nutzen</button>
+                  </div>
+                </details>
+              </fieldset>
+            </div>
+          </details>
+
+          <div class="planner-actions">
+            <button class="primary-action" id="generateButton" type="submit">
+              <span class="button-icon" id="generateButtonIcon" aria-hidden="true">→</span>
+              <span id="generateButtonLabel">Aufgabe finden</span>
+            </button>
+            <p class="status-line" id="statusLine" aria-live="polite">Ohne Konto. Standort bleibt in dieser Sitzung.</p>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <section class="results-panel" id="resultsPanel" aria-labelledby="resultTitle">
+      <div class="result-heading">
+        <div>
+          <p class="kicker" id="contextLabel">Bereit</p>
+          <h2 id="resultTitle" tabindex="-1">Deine Gartenzeit</h2>
+        </div>
+      </div>
+
+      <p class="result-summary" id="resultSummary">Wähle dein Zeitfenster und starte mit einem Klick.</p>
+
+      <div class="task-list" id="taskList" aria-live="polite"></div>
+
+      <div class="empty-state" id="emptyState">
+        <p class="kicker" id="emptyKicker">Startbereit</p>
+        <h3 id="emptyTitle">Wähle dein Zeitfenster und starte.</h3>
+        <p id="emptyText">Berlin ist vorausgewählt; Standortfreigabe ist optional.</p>
+      </div>
+
+      <details class="weather-details" id="weatherDetails" hidden>
+        <summary>
+          <span id="weatherSummary">Wetterdetails anzeigen</span>
+        </summary>
+        <div class="weather-strip" id="weatherStrip" aria-live="polite">
+          <div class="weather-metric">
+            <span>Temperatur</span>
+            <strong id="tempValue">--</strong>
+          </div>
+          <div class="weather-metric">
+            <span>Regen 7 Tage</span>
+            <strong id="rainPastValue">--</strong>
+          </div>
+          <div class="weather-metric">
+            <span>Regenprognose</span>
+            <strong id="rainFutureValue">--</strong>
+          </div>
+          <div class="weather-metric">
+            <span>Wind</span>
+            <strong id="windValue">--</strong>
+          </div>
+          <div class="weather-metric">
+            <span>Frost</span>
+            <strong id="frostValue">--</strong>
+          </div>
+        </div>
+      </details>
+
+      <div class="result-actions">
+        <button class="secondary-action" id="regenerateButton" type="button" hidden>
+          <span aria-hidden="true">↺</span>
+          Neue Vorschläge
+        </button>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <span>Alle Eingaben bleiben in dieser Sitzung.</span>
+    <span>Wetterdaten: Open-Meteo.</span>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
