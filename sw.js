@@ -1,10 +1,10 @@
 const CACHE_PREFIX = 'gartenzeit-';
-const APP_CACHE = `${CACHE_PREFIX}app-v20`;
+const APP_CACHE = `${CACHE_PREFIX}app-v21`;
 
 const APP_SHELL = [
   './',
   './index.html',
-  './src/styles/main.css?v=20',
+  './src/styles/main.css?v=21',
   './src/main.js',
   './src/app/dom.js',
   './src/app/pwa.js',
