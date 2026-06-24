@@ -1,10 +1,11 @@
 const CACHE_PREFIX = 'gartenzeit-';
-const APP_CACHE = `${CACHE_PREFIX}app-v1`;
+const APP_CACHE = `${CACHE_PREFIX}app-v3`;
 
 const APP_SHELL = [
   './',
   './index.html',
   './styles.css',
+  './tasks.js',
   './script.js',
   './manifest.webmanifest',
   './assets/gartenzeit-hero.png',

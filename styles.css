@@ -160,16 +160,92 @@ button:disabled {
 }
 
 .install-action {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 38px;
-  padding: 0 12px;
-  background: var(--surface);
-  color: var(--leaf-strong);
-  font-size: .84rem;
-  font-weight: 850;
+  gap: 9px;
+  min-height: 42px;
+  overflow: hidden;
+  padding: 5px 13px 5px 8px;
+  border-color: color-mix(in srgb, var(--leaf-strong) 76%, var(--line));
+  background:
+    linear-gradient(135deg, var(--leaf-strong), color-mix(in srgb, var(--leaf) 72%, var(--ink)));
+  color: #ffffff;
+  box-shadow: 0 10px 22px rgba(35, 95, 58, .18);
+  font-weight: 950;
   white-space: nowrap;
+}
+
+.install-action::after {
+  content: "";
+  position: absolute;
+  inset: 1px 1px auto;
+  height: 1px;
+  background: rgba(255, 255, 255, .42);
+  pointer-events: none;
+}
+
+.install-action-icon {
+  display: inline-grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid rgba(255, 255, 255, .36);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, .16);
+}
+
+.install-action-arrow {
+  position: relative;
+  width: 14px;
+  height: 14px;
+  border-bottom: 2px solid currentColor;
+}
+
+.install-action-arrow::before,
+.install-action-arrow::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  background: currentColor;
+}
+
+.install-action-arrow::before {
+  top: 1px;
+  width: 2px;
+  height: 9px;
+  transform: translateX(-50%);
+}
+
+.install-action-arrow::after {
+  top: 6px;
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  background: transparent;
+  transform: translateX(-50%) rotate(45deg);
+}
+
+.install-action-copy {
+  display: grid;
+  gap: 1px;
+  line-height: 1;
+  text-align: left;
+}
+
+.install-action-kicker {
+  color: color-mix(in srgb, #ffffff 78%, var(--sun));
+  font-size: .58rem;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.install-action-copy span:last-child {
+  font-size: .84rem;
+  line-height: 1.04;
 }
 
 .primary-action {
@@ -203,6 +279,16 @@ button:disabled {
 .task-done:hover,
 .install-action:hover {
   transform: translateY(-1px);
+}
+
+.install-action:hover {
+  border-color: var(--leaf-strong);
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--leaf-strong) 90%, var(--ink)), var(--leaf));
+}
+
+.install-action:active {
+  transform: translateY(0);
 }
 
 .app-shell {
@@ -908,7 +994,7 @@ body[data-design="swiss"] {
   font-family: "Helvetica Neue", Arial, ui-sans-serif, system-ui, sans-serif;
 }
 
-body[data-design="swiss"] :is(.app-header, .brand-mark, .date-pill, .panel-chip, .task-pill, .priority-pill, .secondary-action, .primary-action, .time-option, .task-done, .install-action, .hero-panel, .planner-panel, .field-group legend span, input, select, .type-chip, .weather-metric, .task-card, .empty-state, .settings-disclosure > summary, .weather-details summary, .task-more summary::after) {
+body[data-design="swiss"] :is(.app-header, .brand-mark, .date-pill, .panel-chip, .task-pill, .priority-pill, .secondary-action, .primary-action, .time-option, .task-done, .install-action, .install-action-icon, .hero-panel, .planner-panel, .field-group legend span, input, select, .type-chip, .weather-metric, .task-card, .empty-state, .settings-disclosure > summary, .weather-details summary, .task-more summary::after) {
   border-radius: 0;
 }
 
@@ -928,6 +1014,27 @@ body[data-design="swiss"] .brand {
 body[data-design="swiss"] .brand-mark {
   background: var(--leaf-strong);
   color: #ffffff;
+}
+
+body[data-design="swiss"] .install-action {
+  border-color: var(--leaf-strong);
+  border-bottom: 3px solid var(--ink);
+  background: var(--leaf-strong);
+  box-shadow: none;
+}
+
+body[data-design="swiss"] .install-action::after {
+  inset: 0 0 auto;
+  height: 3px;
+  background: var(--sun);
+}
+
+body[data-design="swiss"] .install-action:hover {
+  background: color-mix(in srgb, var(--leaf-strong) 86%, var(--ink));
+}
+
+body[data-design="swiss"] .install-action-icon {
+  background: rgba(255, 255, 255, .13);
 }
 
 body[data-design="swiss"] .hero-panel {
@@ -1174,6 +1281,25 @@ body[data-design="swiss"] .task-card.is-featured {
     height: 34px;
   }
 
+  .install-action {
+    gap: 7px;
+    min-height: 38px;
+    padding: 4px 9px 4px 6px;
+  }
+
+  .install-action-icon {
+    width: 26px;
+    height: 26px;
+  }
+
+  .install-action-kicker {
+    font-size: .54rem;
+  }
+
+  .install-action-copy span:last-child {
+    font-size: .78rem;
+  }
+
   .segmented,
   .type-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1183,6 +1309,12 @@ body[data-design="swiss"] .task-card.is-featured {
     grid-template-columns: 1fr;
   }
 
+}
+
+@media (max-width: 360px) {
+  .install-action-kicker {
+    display: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
