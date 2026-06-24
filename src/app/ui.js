@@ -34,15 +34,23 @@ export function createUi(elements, state, gardenLabels) {
     updateFlowSignal();
     updateSettingsSummary();
     elements.contextLabel.textContent = contextLabelText(state.location, state.minutes);
-    elements.resultTitle.textContent = 'Bereit für deine Aufgabe';
-    elements.resultSummary.textContent = 'Wähle dein Zeitfenster, dann erscheinen die Aufgaben sofort.';
+    elements.resultsPanel.classList.add('is-intro');
+    elements.resultTitle.textContent = 'Nächster Schritt';
+    elements.resultSummary.textContent = 'Zeitfenster wählen; die Empfehlung startet automatisch.';
     elements.regenerateButton.hidden = true;
     elements.weatherDetails.hidden = true;
-    elements.emptyKicker.textContent = 'Startbereit';
-    elements.emptyTitle.textContent = 'Wähle zuerst ein Zeitfenster.';
+    elements.emptyKicker.textContent = 'Schritt 1';
+    elements.emptyTitle.textContent = 'Zeit wählen';
     elements.emptyText.textContent = `${state.location.label} ist vorausgewählt; Standortfreigabe ist optional.`;
     elements.taskList.replaceChildren();
     elements.emptyState.classList.add('is-visible');
+    setAgentStatus({
+      step: 'Zeit wählen',
+      last: `${state.location.label} vorausgewählt`,
+      next: 'Zeitfenster antippen',
+      status: 'Bereit.'
+    });
+    updateActionState();
   }
 
   function renderWeather(weather) {
@@ -73,6 +81,7 @@ export function createUi(elements, state, gardenLabels) {
     resultMascot = taskMascotState(tasks, context, mascotCopy);
     setMascot(resultMascot.state, resultMascot.message);
 
+    elements.resultsPanel.classList.remove('is-intro');
     elements.contextLabel.textContent = `${contextLabelText(context.location, context.minutes)} · ${sourceText}`;
     elements.resultTitle.textContent = tasks.length
       ? `${minutesLabel(context.minutes)} in ${context.location.label}`
@@ -87,6 +96,11 @@ export function createUi(elements, state, gardenLabels) {
     elements.emptyText.textContent = 'Wenn sich Wetter oder Zeitfenster ändern, berechnen wir die Vorschläge neu.';
     elements.taskList.replaceChildren(...tasks.map((item, index) => createTaskCard(item, index)));
     elements.emptyState.classList.toggle('is-visible', !tasks.length);
+    setAgentStatus({
+      step: tasks.length ? 'Vorschlag bereit' : 'Ruhemodus',
+      last: tasks.length ? `${tasks.length} Vorschläge berechnet` : 'Keine dringende Aufgabe gefunden',
+      next: tasks.length ? 'Aufgabe markieren oder aktualisieren' : 'Zeit oder Garten ändern'
+    });
 
     if (tasks.length) {
       setStatus(`${tasks.length} Vorschläge für ${typeText}${fallbackText}.`);
@@ -97,21 +111,41 @@ export function createUi(elements, state, gardenLabels) {
 
   function setBusy(isBusy, message) {
     state.busy = isBusy;
-    elements.generateButton.disabled = isBusy;
-    elements.generateButton.classList.toggle('is-loading', isBusy);
-    elements.generateButtonIcon.textContent = isBusy ? '↻' : '→';
-    elements.generateButtonLabel.textContent = isBusy ? 'Berechne...' : 'Aufgabe finden';
+    updateActionState();
     elements.regenerateButton.disabled = isBusy;
     elements.useGps.disabled = isBusy;
     elements.searchCity.disabled = isBusy;
     if (isBusy) {
       setMascot('thinking', busyMascotMessage(message, mascotCopy));
+      setAgentStatus({
+        step: busyStep(message),
+        last: shortMinutesLabel(state.minutes),
+        next: 'Vorschläge berechnen'
+      });
     }
     if (message) setStatus(message);
   }
 
   function setStatus(message) {
     elements.statusLine.textContent = message;
+  }
+
+  function setAgentStatus({ step, last, next, status } = {}) {
+    if (step && elements.agentStep) {
+      elements.agentStep.textContent = step;
+    }
+
+    if (last && elements.agentLast) {
+      elements.agentLast.textContent = last;
+    }
+
+    if (next && elements.agentNext) {
+      elements.agentNext.textContent = next;
+    }
+
+    if (status) {
+      setStatus(status);
+    }
   }
 
   function setMascot(stateName, message) {
@@ -134,6 +168,7 @@ export function createUi(elements, state, gardenLabels) {
     if (!state.hasGenerated) {
       elements.contextLabel.textContent = contextLabelText(state.location, state.minutes);
     }
+    updateActionState();
   }
 
   function updateTimeButtons() {
@@ -162,12 +197,26 @@ export function createUi(elements, state, gardenLabels) {
     });
   }
 
+  function updateActionState() {
+    const hasMinutes = Number.isFinite(state.minutes) && state.minutes >= 5;
+    const copy = actionButtonCopy({
+      isBusy: state.busy,
+      hasMinutes
+    });
+
+    elements.generateButton.disabled = copy.disabled;
+    elements.generateButton.classList.toggle('is-loading', state.busy);
+    elements.generateButtonIcon.textContent = copy.icon;
+    elements.generateButtonLabel.textContent = copy.label;
+  }
+
   return {
     renderIntroState,
     renderWeather,
     renderTasks,
     setBusy,
     setStatus,
+    setAgentStatus,
     setMascot,
     updateFlowSignal,
     updateTimeButtons,
@@ -180,10 +229,6 @@ function createTaskCard(item, index = 0) {
   const article = document.createElement('article');
   article.className = `task-card ${item.priority.className}${index === 0 ? ' is-featured' : ''}`;
   article.dataset.taskId = item.task.id;
-
-  const eyebrow = document.createElement('p');
-  eyebrow.className = 'task-eyebrow';
-  eyebrow.textContent = index === 0 ? 'Jetzt zuerst' : 'Weitere Aufgabe';
 
   const meta = document.createElement('div');
   meta.className = 'task-top';
@@ -217,7 +262,14 @@ function createTaskCard(item, index = 0) {
 
   const content = document.createElement('div');
   content.className = 'task-content';
-  content.append(eyebrow, meta, title, reason, more);
+  if (index === 0) {
+    const eyebrow = document.createElement('p');
+    eyebrow.className = 'task-eyebrow';
+    eyebrow.textContent = 'Jetzt zuerst';
+    content.append(eyebrow);
+  }
+
+  content.append(meta, title, reason, more);
 
   const action = document.createElement('div');
   action.className = 'task-action';
@@ -270,6 +322,13 @@ function busyMascotMessage(message, copy) {
   if (message?.includes('Stadt')) return 'Ich suche deine Stadt.';
   if (message?.includes('Standort')) return 'Ich warte kurz auf den Standort.';
   return copy.thinking;
+}
+
+function busyStep(message) {
+  if (message?.includes('Stadt')) return 'Stadt suchen';
+  if (message?.includes('Standort')) return 'Standort prüfen';
+  if (message?.includes('Wetter')) return 'Wetter prüfen';
+  return 'Berechnen';
 }
 
 function pill(text, className) {
@@ -330,4 +389,20 @@ function minutesLabel(minutes) {
 
 function shortMinutesLabel(minutes) {
   return Number.isFinite(minutes) ? `${minutes} min` : 'Zeit wählen';
+}
+
+export function actionButtonCopy({ isBusy, hasMinutes }) {
+  if (isBusy) {
+    return { icon: '↻', label: 'Berechne...', disabled: true };
+  }
+
+  if (!hasMinutes) {
+    return { icon: '→', label: 'Zeitfenster wählen', disabled: true };
+  }
+
+  return {
+    icon: '↻',
+    label: 'Vorschlag aktualisieren',
+    disabled: false
+  };
 }

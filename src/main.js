@@ -79,6 +79,7 @@ function selectMinutes(minutes) {
   elements.minutesFeedback.textContent = '';
   ui.updateTimeButtons();
   ui.updateFlowSignal();
+  markMinutesSelected(minutes);
   queueRecommendations();
 }
 
@@ -110,6 +111,7 @@ function handleCustomMinutes() {
     : '';
   ui.updateTimeButtons();
   ui.updateFlowSignal();
+  markMinutesSelected(state.minutes);
   queueRecommendations(CUSTOM_MINUTES_DEBOUNCE_MS);
 }
 
@@ -126,6 +128,7 @@ function normalizeCustomMinutes() {
     elements.minutesFeedback.textContent = 'Ich rechne mit 5 Minuten.';
     ui.updateTimeButtons();
     ui.updateFlowSignal();
+    markMinutesSelected(state.minutes);
     queueRecommendations();
   } else if (minutes > 180) {
     elements.customMinutes.value = '180';
@@ -133,6 +136,7 @@ function normalizeCustomMinutes() {
     elements.minutesFeedback.textContent = 'Ich rechne mit maximal 180 Minuten.';
     ui.updateTimeButtons();
     ui.updateFlowSignal();
+    markMinutesSelected(state.minutes);
     queueRecommendations();
   }
 }
@@ -142,11 +146,22 @@ function handleGardenTypes(event) {
   if (!checked.length) {
     event.target.checked = true;
     ui.setStatus('Wähle mindestens einen Gartentyp.');
+    ui.setAgentStatus({
+      step: 'Garten prüfen',
+      last: 'Kein Gartentyp gewählt',
+      next: 'Mindestens einen Typ aktiv lassen'
+    });
     return;
   }
 
   state.selectedTypes = new Set(checked.map(input => input.value));
   ui.updateSettingsSummary();
+  ui.setAgentStatus({
+    step: hasValidMinutes() ? 'Kontext aktualisiert' : 'Zeit wählen',
+    last: 'Gartentyp aktualisiert',
+    next: hasValidMinutes() ? 'Vorschlag aktualisieren' : 'Zeitfenster antippen',
+    status: 'Gartentyp aktualisiert.'
+  });
 }
 
 function handlePresetCity() {
@@ -158,7 +173,12 @@ function handlePresetCity() {
 
   state.location = CITY_PRESETS[value];
   ui.updateSettingsSummary();
-  ui.setStatus(`${state.location.label} ist ausgewählt.`);
+  ui.setAgentStatus({
+    step: hasValidMinutes() ? 'Kontext aktualisiert' : 'Zeit wählen',
+    last: `${state.location.label} ausgewählt`,
+    next: hasValidMinutes() ? 'Vorschlag aktualisieren' : 'Zeitfenster antippen',
+    status: `${state.location.label} ist ausgewählt.`
+  });
 }
 
 async function searchCity() {
@@ -181,7 +201,12 @@ async function searchCity() {
       state.location = location;
       elements.citySelect.value = 'custom';
       ui.updateSettingsSummary();
-      ui.setStatus(`${state.location.label} ist ausgewählt.`);
+      ui.setAgentStatus({
+        step: hasValidMinutes() ? 'Kontext aktualisiert' : 'Zeit wählen',
+        last: `${state.location.label} ausgewählt`,
+        next: hasValidMinutes() ? 'Vorschlag aktualisieren' : 'Zeitfenster antippen',
+        status: `${state.location.label} ist ausgewählt.`
+      });
       return true;
     });
   } catch (error) {
@@ -216,7 +241,12 @@ async function useGeolocation() {
       };
       elements.citySelect.value = 'custom';
       ui.updateSettingsSummary();
-      ui.setStatus('Standort übernommen. Die Koordinaten bleiben nur in dieser Sitzung.');
+      ui.setAgentStatus({
+        step: hasValidMinutes() ? 'Kontext aktualisiert' : 'Zeit wählen',
+        last: 'Standort übernommen',
+        next: hasValidMinutes() ? 'Vorschlag aktualisieren' : 'Zeitfenster antippen',
+        status: 'Standort übernommen. Die Koordinaten bleiben nur in dieser Sitzung.'
+      });
       return true;
     });
   } catch (error) {
@@ -234,7 +264,12 @@ async function generateRecommendations() {
 
   if (!hasValidMinutes()) {
     pendingRecommendation = false;
-    ui.setStatus('Wähle zuerst ein Zeitfenster.');
+    ui.setAgentStatus({
+      step: 'Zeit wählen',
+      last: 'Kein Zeitfenster gewählt',
+      next: 'Zeitfenster antippen',
+      status: 'Wähle zuerst ein Zeitfenster.'
+    });
     ui.setMascot('idle', 'Wie viel Gartenzeit hast du heute?');
     return false;
   }
@@ -322,6 +357,15 @@ function resetRecommendations() {
 
 function hasValidMinutes() {
   return Number.isFinite(state.minutes) && state.minutes >= 5;
+}
+
+function markMinutesSelected(minutes) {
+  ui.setAgentStatus({
+    step: 'Berechnung startet',
+    last: `${minutes} min gewählt`,
+    next: 'Vorschläge erscheinen gleich',
+    status: 'Zeitfenster gewählt. Ich rechne automatisch.'
+  });
 }
 
 init();

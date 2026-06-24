@@ -25,15 +25,24 @@
       <span>Gartenzeit</span>
     </a>
     <div class="header-actions">
-      <button class="install-action" id="installButton" type="button" aria-label="Gartenzeit als PWA installieren" hidden>
-        <span class="install-action-icon" aria-hidden="true">
-          <span class="install-action-arrow"></span>
-        </span>
-        <span class="install-action-copy">
-          <span class="install-action-kicker">Als PWA</span>
-          <span>Installieren</span>
-        </span>
-      </button>
+      <div class="install-control">
+        <button class="install-action" id="installButton" type="button" aria-label="Gartenzeit als PWA installieren" hidden>
+          <span class="install-action-icon" aria-hidden="true">
+            <span class="install-action-arrow"></span>
+          </span>
+          <span class="install-action-copy">
+            <span class="install-action-kicker">Als PWA</span>
+            <span class="install-action-label">Installieren</span>
+          </span>
+        </button>
+        <div class="install-help" id="installHelp" role="note" hidden>
+          <p class="install-help-title">Auf dem iPhone über Teilen hinzufügen:</p>
+          <ol class="install-help-steps">
+            <li>Teilen öffnen.</li>
+            <li>Zum Home-Bildschirm wählen.</li>
+          </ol>
+        </div>
+      </div>
       <span class="date-pill" id="todayLabel">Heute</span>
     </div>
   </header>
@@ -67,12 +76,16 @@
             </div>
             <p class="mascot-bubble" id="mascotBubble">Wie viel Gartenzeit hast du heute?</p>
           </div>
-          <h1 class="visually-hidden" id="appTitle">Gartenzeit</h1>
-          <p class="tagline">Such dir ein Zeitfenster aus. Wir zeigen dir eine kleine, sinnvolle Gartenaufgabe für heute.</p>
+          <h1 id="appTitle">Was lohnt sich heute im Garten?</h1>
+          <p class="tagline">Wähle deine Zeit. Gartenzeit prüft Wetter und Saison und gibt dir eine Aufgabe, die heute passt.</p>
         </div>
 
-        <form class="planner-panel" id="plannerForm">
-          <span class="visually-hidden" id="flowSignal">Zeit wählen</span>
+        <form class="planner-panel" id="plannerForm" aria-labelledby="plannerHeading">
+          <div class="planner-head">
+            <p class="panel-label">Schritt 1</p>
+            <h2 id="plannerHeading">Zeitfenster wählen</h2>
+            <span class="flow-signal" id="flowSignal">Zeit wählen</span>
+          </div>
 
           <fieldset class="field-group time-field">
             <legend class="visually-hidden">Zeitfenster wählen</legend>
@@ -177,31 +190,46 @@
           </details>
 
           <div class="planner-actions">
-            <button class="primary-action" id="generateButton" type="submit">
+            <button class="primary-action" id="generateButton" type="submit" disabled>
               <span class="button-icon" id="generateButtonIcon" aria-hidden="true">→</span>
-              <span id="generateButtonLabel">Aufgabe finden</span>
+              <span id="generateButtonLabel">Zeitfenster wählen</span>
             </button>
-            <p class="status-line" id="statusLine" aria-live="polite">Ohne Konto. Standort bleibt in dieser Sitzung.</p>
+            <dl class="agent-status" aria-label="Agentenstatus">
+              <div class="agent-status-item">
+                <dt>Schritt</dt>
+                <dd id="agentStep">Zeit wählen</dd>
+              </div>
+              <div class="agent-status-item">
+                <dt>Letzte Aktion</dt>
+                <dd id="agentLast">Berlin vorausgewählt</dd>
+              </div>
+              <div class="agent-status-item">
+                <dt>Nächste Aktion</dt>
+                <dd id="agentNext">Zeitfenster antippen</dd>
+              </div>
+            </dl>
+            <p class="status-line" id="statusLine" aria-live="polite">Bereit.</p>
+            <p class="privacy-line">Ohne Konto. Standort bleibt in dieser Sitzung.</p>
           </div>
         </form>
       </div>
     </section>
 
-    <section class="results-panel" id="resultsPanel" aria-labelledby="resultTitle">
+    <section class="results-panel is-intro" id="resultsPanel" aria-labelledby="resultTitle">
       <div class="result-heading">
         <div>
           <p class="kicker" id="contextLabel">Bereit</p>
-          <h2 id="resultTitle" tabindex="-1">Deine Gartenzeit</h2>
+          <h2 id="resultTitle" tabindex="-1">Nächster Schritt</h2>
         </div>
       </div>
 
-      <p class="result-summary" id="resultSummary">Wähle dein Zeitfenster, dann erscheinen die Aufgaben sofort.</p>
+      <p class="result-summary" id="resultSummary">Zeitfenster wählen; die Empfehlung startet automatisch.</p>
 
       <div class="task-list" id="taskList" aria-live="polite"></div>
 
       <div class="empty-state" id="emptyState">
-        <p class="kicker" id="emptyKicker">Startbereit</p>
-        <h3 id="emptyTitle">Wähle zuerst ein Zeitfenster.</h3>
+        <p class="kicker" id="emptyKicker">Schritt 1</p>
+        <h3 id="emptyTitle">Zeit wählen</h3>
         <p id="emptyText">Berlin ist vorausgewählt; Standortfreigabe ist optional.</p>
       </div>
 
